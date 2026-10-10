@@ -11,6 +11,7 @@ Evens is a single HTML file with no build step and no dependencies apart from Go
 - Bills paid by several people
 - Balances netted across the group, then simplified to the fewest transfers
 - Recording settlements, with undo after deleting
+- Bank details (name, sort code, account number, other payment links) saved per person and shown next to every payment they're owed. Tap a field to copy it, or copy everything with the amount and a reference
 - Insights: monthly spend, spend by category, paid vs. share per member
 - Search, category filter, CSV export
 

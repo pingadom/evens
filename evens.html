@@ -1,0 +1,1325 @@
+<title>Evens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: ledger-style app shell — slim nav rail left (bottom tab bar on phones), one working column right; money figures in mono, headline sums in a high-contrast serif. */
+:root{
+  --bg:#EFF2EE; --surface:#FBFCFA; --surface-2:#E5EAE5; --ink:#111A16; --ink-2:#47524D; --muted:#78837E; --line:#D6DDD8;
+  --accent:#9A6A0C; --accent-soft:#F3E6C8; --felt:#0F4F3D; --felt-ink:#EAF4EF;
+  --pos:#147245; --pos-soft:#DCEFE4; --neg:#B53324; --neg-soft:#F6DFDA; --warn:#8A5A00; --warn-soft:#F7EACB;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300;
+  --shadow:0 1px 0 rgba(17,26,22,.04),0 8px 24px -12px rgba(17,26,22,.18);
+  --f-display:"Gloock",Georgia,"Times New Roman",serif;
+  --f-body:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1311; --surface:#151D1A; --surface-2:#1E2824; --ink:#E8EFEB; --ink-2:#AAB6B0; --muted:#7A8781; --line:#29342F;
+  --accent:#E2AE48; --accent-soft:#3A2E14; --felt:#0C3A2E; --felt-ink:#DDF0E6;
+  --pos:#45C58C; --pos-soft:#15332540; --neg:#F06D5C; --neg-soft:#3B1C1740; --warn:#E8B44A; --warn-soft:#3A2E1440;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#2f9a2f;
+  --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 30px -14px rgba(0,0,0,.7); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1311; --surface:#151D1A; --surface-2:#1E2824; --ink:#E8EFEB; --ink-2:#AAB6B0; --muted:#7A8781; --line:#29342F;
+  --accent:#E2AE48; --accent-soft:#3A2E14; --felt:#0C3A2E; --felt-ink:#DDF0E6;
+  --pos:#45C58C; --pos-soft:#15332540; --neg:#F06D5C; --neg-soft:#3B1C1740; --warn:#E8B44A; --warn-soft:#3A2E1440;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#2f9a2f;
+  --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 30px -14px rgba(0,0,0,.7); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+h1,h2,h3{margin:0;text-wrap:balance;font-weight:600}
+.mono,.amt{font-family:var(--f-mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.pos{color:var(--pos)} .neg{color:var(--neg)} .mut{color:var(--muted)}
+.eyebrow{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+/* shell */
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100%}
+.side{position:sticky;top:env(safe-area-inset-top,0px);height:100vh;padding:22px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:22px;background:var(--bg)}
+.brand{display:flex;flex-direction:column;gap:4px;padding:0 10px}
+.brand b{font:400 30px/1 var(--f-display);letter-spacing:-.01em}
+.brand span{font:500 11px var(--f-mono);color:var(--muted);white-space:nowrap}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--ink-2);font-weight:500;min-width:0}
+.nav button:hover{background:var(--surface-2);color:var(--ink)}
+.nav button[aria-current="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.nav button:focus-visible{outline:2px solid var(--accent)}
+.nav .sub{padding-left:30px;font-size:14px;font-weight:400}
+.nav .sub span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav svg{flex:none;width:18px;height:18px}
+.navlabel{padding:14px 10px 4px}
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding:0 6px}
+.me-field{display:flex;flex-direction:column;gap:4px}
+.me-field input{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:100%}
+.syncpill{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
+.dot.on{background:var(--pos)}
+
+main{min-width:0;padding-block:28px 96px;padding-inline:clamp(16px,4vw,48px)}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px}
+.pagehead h1{font:400 clamp(30px,4.4vw,44px)/1.05 var(--f-display);letter-spacing:-.01em}
+.pagehead .sub{color:var(--ink-2);margin-top:6px}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+
+.tabbar{display:none}
+
+/* controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;border-radius:10px;font-weight:600;font-size:14px;line-height:1.2;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.primary:hover{opacity:.9}
+.btn.brass{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--ink-2)}
+.btn.ghost:hover{background:var(--surface-2)}
+.btn.danger{color:var(--neg);border-color:color-mix(in srgb,var(--neg) 40%,var(--line))}
+.btn.sm{padding:5px 10px;font-size:13px;border-radius:8px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn svg{width:16px;height:16px}
+.input,select.input,textarea.input{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-width:0}
+.input:focus{border-color:var(--ink-2);outline:none}
+textarea.input{resize:vertical;min-height:64px}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600;color:var(--ink-2);min-width:0}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 160px}
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--surface-2);border-radius:10px;padding:3px;gap:2px}
+.seg button{all:unset;cursor:pointer;padding:6px 12px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.seg button:focus-visible{outline:2px solid var(--accent)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{all:unset;cursor:pointer;padding:10px 12px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--ink)}
+.tabs button:focus-visible{outline:2px solid var(--accent)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--surface-2);font-size:13px;font-weight:500;border:1px solid transparent}
+button.chip{cursor:pointer}
+button.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.pill{display:inline-flex;align-items:center;gap:5px;font:600 11px/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:6px}
+.pill.live{background:var(--neg-soft);color:var(--neg)}
+.pill.live::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.4s infinite}
+.pill.final{background:var(--surface-2);color:var(--ink-2)}
+.pill.sample{background:var(--accent-soft);color:var(--accent)}
+@keyframes blink{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.pill.live::before{animation:none}*{transition:none!important}}
+
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;min-width:0}
+.card h2{font-size:16px}
+.cardhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.cols{display:grid;gap:16px;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+.stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.stat .v{font:400 28px/1.1 var(--f-display);font-variant-numeric:lining-nums}
+.stat .h{font-size:12.5px;color:var(--muted)}
+
+.gcard{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;min-width:0;transition:transform .15s,box-shadow .15s}
+.gcard:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.gcard:focus-visible{outline:2px solid var(--accent)}
+.gcard h3{font-size:18px;overflow-wrap:anywhere}
+.gcard .meta{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.avs{display:flex}
+.av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:600 11.5px var(--f-body);color:#fff;border:2px solid var(--surface);margin-left:-7px;flex:none}
+.avs .av:first-child{margin-left:0}
+.av.lg{width:36px;height:36px;font-size:13px;margin:0}
+
+/* lists */
+.list{display:flex;flex-direction:column}
+.month{padding:16px 4px 6px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:1}
+.erow{all:unset;cursor:pointer;display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 12px;border-radius:12px;min-width:0}
+.erow:hover{background:var(--surface)}
+.erow:focus-visible{outline:2px solid var(--accent)}
+.date{display:flex;flex-direction:column;align-items:center;line-height:1.05;color:var(--muted)}
+.date b{font:400 20px var(--f-display);color:var(--ink)}
+.date small{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em}
+.etitle{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.esub{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.eright{text-align:right;display:flex;flex-direction:column;align-items:flex-end;line-height:1.25}
+.eright small{font-size:11.5px;color:var(--muted)}
+.cat{display:inline-flex;align-items:center;gap:5px}
+.cat i{width:8px;height:8px;border-radius:2px;display:inline-block;flex:none}
+.erow.pay .etitle{font-weight:500;color:var(--ink-2)}
+.paymark{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--pos-soft);color:var(--pos);margin:auto}
+.paymark svg{width:18px;height:18px}
+
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar .input{flex:1 1 200px;width:auto}
+.toolbar select.input{flex:0 1 170px}
+
+/* balances */
+.balrow{display:grid;grid-template-columns:minmax(90px,150px) minmax(0,1fr) auto;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.balrow:last-child{border-bottom:0}
+.who{display:flex;gap:8px;align-items:center;min-width:0;font-weight:600}
+.who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.divbar{position:relative;height:14px}
+.divbar::before{content:"";position:absolute;left:50%;top:-4px;bottom:-4px;width:1px;background:var(--line)}
+.divbar i{position:absolute;top:0;height:100%;border-radius:4px}
+.divbar i.p{left:50%;background:var(--pos);border-top-left-radius:0;border-bottom-left-radius:0}
+.divbar i.n{right:50%;background:var(--neg);border-top-right-radius:0;border-bottom-right-radius:0}
+.xfer{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.xfer:last-child{border-bottom:0}
+.xfer .names{display:flex;gap:6px;align-items:center;flex-wrap:wrap;min-width:0}
+.xfer .names svg{width:16px;height:16px;color:var(--muted)}
+.settled{display:flex;gap:10px;align-items:center;color:var(--pos);font-weight:600;padding:8px 0}
+
+/* bars (html) */
+.hbars{display:flex;flex-direction:column;gap:10px}
+.hbar{display:grid;grid-template-columns:110px minmax(0,1fr) 90px;gap:10px;align-items:center;font-size:13.5px}
+.hbar .track{height:12px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.hbar .fill{height:100%;border-radius:0 4px 4px 0}
+.hbar .lab{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vbars{display:flex;align-items:flex-end;gap:2px;height:170px;padding-top:8px;border-bottom:1px solid var(--line)}
+.vbars .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;min-width:0;position:relative}
+.vbars .col i{display:block;background:var(--s1);border-radius:4px 4px 0 0;min-height:0;margin:0 1px}
+.vbars .col:hover i{filter:brightness(1.12)}
+.vlabels{display:flex;gap:2px;font-size:11px;color:var(--muted)}
+.vlabels span{flex:1;text-align:center;min-width:0;overflow:hidden}
+
+/* tables */
+.tablewrap{overflow-x:auto;margin:0 -4px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th.r,td.r{text-align:right}
+th button{all:unset;cursor:pointer}
+th button:focus-visible{outline:2px solid var(--accent)}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tr.me td{background:var(--accent-soft)}
+.rank{font:400 18px var(--f-display);color:var(--muted);width:32px}
+
+/* poker */
+.felt{background:var(--felt);color:var(--felt-ink);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden}
+.felt::after{content:"";position:absolute;inset:auto -60px -90px auto;width:240px;height:240px;border-radius:50%;border:18px dashed color-mix(in srgb,var(--felt-ink) 10%,transparent);pointer-events:none}
+.felt .eyebrow{color:color-mix(in srgb,var(--felt-ink) 70%,transparent)}
+.felt .big{font:400 clamp(30px,5vw,46px)/1 var(--f-display)}
+.felt .btn{background:transparent;color:var(--felt-ink);border-color:color-mix(in srgb,var(--felt-ink) 35%,transparent)}
+.felt .btn.brass{background:var(--accent);border-color:var(--accent);color:#fff}
+.felt .input{background:color-mix(in srgb,var(--felt-ink) 8%,transparent);border-color:color-mix(in srgb,var(--felt-ink) 25%,transparent);color:var(--felt-ink)}
+.chips{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.pchip{display:inline-flex;align-items:center;gap:4px;font:500 12.5px var(--f-mono);padding:3px 4px 3px 8px;border-radius:999px;background:var(--surface-2);border:1px dashed var(--line)}
+.pchip button{all:unset;cursor:pointer;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;color:var(--muted);font-size:14px;line-height:1}
+.pchip button:hover{background:var(--line);color:var(--ink)}
+.pchip button:focus-visible{outline:2px solid var(--accent)}
+.addbuy{all:unset;cursor:pointer;font:600 12.5px var(--f-body);padding:4px 9px;border-radius:999px;border:1px solid var(--accent);color:var(--accent)}
+.addbuy:hover{background:var(--accent-soft)}
+.addbuy:focus-visible{outline:2px solid var(--accent)}
+.cashin{width:110px;text-align:right;font-family:var(--f-mono)}
+.ledger{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center;padding:12px 14px;border-radius:12px;background:var(--surface-2);font-size:14px}
+.ledger.bad{background:var(--warn-soft);color:var(--warn)}
+.ledger.ok{background:var(--pos-soft);color:var(--pos)}
+.scard{all:unset;cursor:pointer;display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;min-width:0}
+.scard:hover{box-shadow:var(--shadow)}
+.scard:focus-visible{outline:2px solid var(--accent)}
+
+/* chart */
+.chart{position:relative;width:100%;min-height:280px}
+.chart svg{display:block;width:100%;overflow:visible}
+.chart text{fill:var(--muted);font:11px var(--f-mono)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+#tip{position:fixed;z-index:60;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:9px;padding:8px 10px;font-size:12.5px;line-height:1.45;max-width:240px;box-shadow:var(--shadow)}
+#tip .t{font-weight:700;margin-bottom:2px}
+#tip .r{display:flex;justify-content:space-between;gap:14px;font-family:var(--f-mono)}
+#tip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+
+/* sheet */
+.sheet-wrap{position:fixed;inset:0;z-index:40;display:flex;justify-content:flex-end;background:color-mix(in srgb,var(--ink) 35%,transparent);animation:fade .15s}
+.sheet{width:min(520px,100%);height:100%;background:var(--bg);display:flex;flex-direction:column;box-shadow:-20px 0 50px -20px rgba(0,0,0,.4);animation:slide .2s ease-out}
+.sheet header{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:calc(16px + env(safe-area-inset-top,0px)) 20px 14px;border-bottom:1px solid var(--line)}
+.sheet header h2{font:400 24px var(--f-display)}
+.sheet .body{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:16px}
+.sheet footer{display:flex;gap:8px;justify-content:space-between;padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);flex-wrap:wrap}
+.sheet footer .end{display:flex;gap:8px;margin-left:auto}
+@keyframes fade{from{opacity:0}}
+@keyframes slide{from{transform:translateX(40px);opacity:.4}}
+.bigamt{display:flex;align-items:center;gap:8px;border-bottom:2px solid var(--ink);padding-bottom:4px}
+.bigamt span{font:400 28px var(--f-display);color:var(--muted)}
+.bigamt input{all:unset;font:400 38px/1.1 var(--f-display);width:100%;min-width:0}
+.splitlist{display:flex;flex-direction:column;gap:6px}
+.sl{display:grid;grid-template-columns:minmax(0,1fr) 120px 92px;gap:10px;align-items:center;padding:6px 8px;border-radius:10px;background:var(--surface)}
+.sl .who input[type=checkbox]{width:17px;height:17px;accent-color:var(--ink)}
+.sl .share{text-align:right;font-family:var(--f-mono);font-size:13.5px;color:var(--ink-2)}
+.sl .input{padding:6px 8px;text-align:right;font-family:var(--f-mono)}
+.hint{font-size:13px;padding:8px 10px;border-radius:9px;background:var(--surface-2);color:var(--ink-2)}
+.hint.bad{background:var(--neg-soft);color:var(--neg)}
+.hint.ok{background:var(--pos-soft);color:var(--pos)}
+.item{display:flex;flex-direction:column;gap:8px;padding:10px;background:var(--surface);border-radius:12px;border:1px solid var(--line)}
+.item .top{display:grid;grid-template-columns:minmax(0,1fr) 110px 32px;gap:8px}
+.x{all:unset;cursor:pointer;width:32px;height:36px;display:grid;place-items:center;border-radius:8px;color:var(--muted)}
+.x:hover{background:var(--surface-2);color:var(--neg)}
+.x:focus-visible{outline:2px solid var(--accent)}
+.catpick{display:flex;flex-wrap:wrap;gap:6px}
+.confirm{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:12px;background:var(--neg-soft);color:var(--neg)}
+
+/* empty + misc */
+.empty{display:flex;flex-direction:column;gap:14px;align-items:flex-start;padding:28px;border:1px dashed var(--line);border-radius:18px;background:var(--surface)}
+.empty h2{font:400 28px/1.1 var(--f-display)}
+.empty p{margin:0;color:var(--ink-2);max-width:60ch}
+.feat{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));width:100%}
+.feat div{padding:12px 14px;border-radius:12px;background:var(--surface-2);font-size:14px;color:var(--ink-2)}
+.feat b{display:block;color:var(--ink);margin-bottom:2px}
+.banner{padding:10px 14px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-size:14px}
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:70;display:flex;gap:12px;align-items:center;background:var(--ink);color:var(--bg);padding:10px 12px 10px 16px;border-radius:12px;box-shadow:var(--shadow);font-size:14px;max-width:calc(100% - 32px)}
+#toast button{all:unset;cursor:pointer;font-weight:700;color:var(--accent);padding:2px 6px}
+.loading{padding:60px 0;color:var(--muted);text-align:center}
+.kbd{font:500 12px var(--f-mono);padding:1px 5px;border:1px solid var(--line);border-radius:5px}
+
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{display:none}
+  .cols{grid-template-columns:minmax(0,1fr)}
+  .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));justify-content:space-around}
+  .tabbar button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;font-weight:600;color:var(--muted);padding:4px 12px;border-radius:10px}
+  .tabbar button[aria-current="true"]{color:var(--ink)}
+  .tabbar svg{width:22px;height:22px}
+  .mobile-only{display:flex!important}
+}
+.mobile-only{display:none!important}
+@media (max-width:520px){
+  .hbar{grid-template-columns:80px minmax(0,1fr) 78px}
+  .sl{grid-template-columns:minmax(0,1fr) 96px 80px}
+  .balrow{grid-template-columns:minmax(70px,100px) minmax(0,1fr) auto}
+  .scard{grid-template-columns:44px minmax(0,1fr) auto;gap:10px}
+}
+</style>
+
+<div class="app">
+  <aside class="side" id="side"></aside>
+  <main id="main"><div class="loading">Opening your ledger…</div></main>
+</div>
+<nav class="tabbar" id="tabbar"></nav>
+<div id="sheet" class="sheet-wrap" hidden></div>
+<div id="tip" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem('evens:' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('evens:' + k, JSON.stringify(v)); } catch {} }
+};
+const norm = s => String(s || '').trim().toLowerCase();
+const today = () => new Date().toISOString().slice(0, 10);
+const toCents = v => { const n = parseFloat(String(v).replace(/[^0-9.\-]/g, '')); return isFinite(n) ? Math.round(n * 100) : 0; };
+const fromCents = c => (c / 100).toFixed(2).replace(/\.00$/, '');
+const CURRENCIES = ['GBP','USD','EUR','INR','CAD','AUD','NZD','CHF','SGD','AED','JPY','ZAR'];
+const fmtCache = {};
+function money(c, cur = 'GBP', sign = false) {
+  const key = cur + sign;
+  if (!fmtCache[key]) {
+    try { fmtCache[key] = new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur, signDisplay: sign ? 'exceptZero' : 'auto', minimumFractionDigits: cur === 'JPY' ? 0 : 2, maximumFractionDigits: cur === 'JPY' ? 0 : 2 }); }
+    catch { fmtCache[key] = { format: n => (sign && n > 0 ? '+' : '') + n.toFixed(2) }; }
+  }
+  return fmtCache[key].format((c || 0) / 100);
+}
+function sym(cur) { try { return (0).toLocaleString('en-GB', { style: 'currency', currency: cur, maximumFractionDigits: 0 }).replace(/[\d\s.,]/g, ''); } catch { return cur; } }
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fdate = d => { const [y, m, dd] = (d || today()).split('-'); return `${+dd} ${MONTHS[+m - 1]} ${y}`; };
+const AV_COLORS = ['#2a78d6','#d4572a','#168f64','#b98200','#c95584','#2f7d2f','#5b4bbf','#c83f3e'];
+function avColor(name) { let h = 0; for (const ch of norm(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return AV_COLORS[h % AV_COLORS.length]; }
+const initials = n => String(n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+const av = (name, cls = '') => `<span class="av ${cls}" style="background:${avColor(name)}" aria-hidden="true">${esc(initials(name))}</span>`;
+
+const CATS = {
+  food: ['Food & dining', '#d4572a'], groceries: ['Groceries', '#168f64'], rent: ['Rent', '#5b4bbf'],
+  bills: ['Bills & utilities', '#2a78d6'], transport: ['Transport', '#b98200'], travel: ['Travel & stays', '#0f7f8c'],
+  drinks: ['Drinks', '#c95584'], fun: ['Entertainment', '#8a5cc2'], shopping: ['Shopping', '#c83f3e'], other: ['Other', '#78837E']
+};
+const catTag = k => { const c = CATS[k] || CATS.other; return `<span class="cat"><i style="background:${c[1]}"></i>${esc(c[0])}</span>`; };
+
+const I = {
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  group: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c.6-3.4 3-5.5 6-5.5s5.4 2.1 6 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.4.2 4 1.9 4.5 4.6"/></svg>',
+  chip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5c.8-4 3.8-6.3 7.5-6.3s6.7 2.3 7.5 6.3"/></svg>'
+};
+
+/* ---------- store: shared db when available, browser storage otherwise ---------- */
+const COLLS = ['groups', 'expenses', 'poker'];
+const Store = {
+  db: null, mode: 'connecting', canWrite: true, loaded: {},
+  data: { groups: {}, expenses: {}, poker: {} },
+  chains: {}, timers: {},
+  async init() {
+    let db = null;
+    try { db = window.claude && window.claude.use ? await window.claude.use('db') : null; } catch { db = null; }
+    if (db) {
+      this.db = db; this.mode = 'shared';
+      try { const u = await window.claude.use('user'); if (u) { const c = await u.can('data.write'); if (c === false) this.canWrite = false; } } catch {}
+      for (const c of COLLS) {
+        db.collection(c).limit(1000).onSnapshot(snap => {
+          const m = {};
+          snap.docs.forEach(d => { m[d.id] = { ...d.data(), id: d.id }; });
+          // keep optimistic local edits that haven't been flushed yet
+          for (const id in this.timers) if (id.startsWith(c + '/') && this.data[c][id.slice(c.length + 1)]) m[id.slice(c.length + 1)] = this.data[c][id.slice(c.length + 1)];
+          this.data[c] = m; this.loaded[c] = true; render();
+        }, err => { if (err.code === 'revoked') { this.canWrite = false; } toast('Live sync stopped (' + err.code + '). Reload to reconnect.'); });
+      }
+    } else {
+      this.mode = 'local';
+      const saved = LS.get('data', null);
+      if (saved) for (const c of COLLS) this.data[c] = saved[c] || {};
+      COLLS.forEach(c => this.loaded[c] = true);
+      render();
+    }
+  },
+  get ready() { return COLLS.every(c => this.loaded[c]); },
+  _write(c, id, body) {
+    const key = c + '/' + id;
+    if (!this.db) { LS.set('data', this.data); return Promise.resolve(); }
+    const run = () => (body ? this.db.collection(c).doc(id).set(body) : this.db.collection(c).doc(id).delete())
+      .catch(e => {
+        if (e && e.code === 'unavailable') return new Promise(r => setTimeout(r, 600 + Math.random() * 600)).then(() => body ? this.db.collection(c).doc(id).set(body) : this.db.collection(c).doc(id).delete());
+        throw e;
+      })
+      .catch(e => {
+        if (e && e.code === 'invalid_argument') { this.canWrite = false; render(); toast('You can view this ledger but not change it. Ask the owner for Contributor access.'); }
+        else if (e && e.code === 'quota_exceeded') toast('Storage is full. Delete old sessions or groups to free space.');
+        else toast('Could not save that change (' + (e && e.code || 'error') + ').');
+      });
+    return (this.chains[key] = (this.chains[key] || Promise.resolve()).then(run));
+  },
+  put(c, id, body, debounce = 0) {
+    const clean = JSON.parse(JSON.stringify({ ...body })); delete clean.id;
+    this.data[c][id] = { ...clean, id };
+    render();
+    const key = c + '/' + id;
+    clearTimeout(this.timers[key]);
+    if (debounce) { this.timers[key] = setTimeout(() => { delete this.timers[key]; this._write(c, id, clean); }, debounce); return; }
+    delete this.timers[key];
+    return this._write(c, id, clean);
+  },
+  del(c, id) {
+    delete this.data[c][id];
+    const key = c + '/' + id; clearTimeout(this.timers[key]); delete this.timers[key];
+    render();
+    return this._write(c, id, null);
+  }
+};
+
+/* ---------- money maths ---------- */
+// Split `total` cents across ids by integer weights, handing leftover pennies out by largest remainder.
+function allocate(total, weights) {
+  const ids = Object.keys(weights).filter(k => weights[k] > 0);
+  const sum = ids.reduce((s, k) => s + weights[k], 0);
+  const out = {};
+  if (!sum) return out;
+  let used = 0; const rem = [];
+  for (const k of ids) { const exact = total * weights[k] / sum; out[k] = Math.floor(exact); used += out[k]; rem.push([k, exact - out[k]]); }
+  rem.sort((a, b) => b[1] - a[1]);
+  for (let i = 0; used < total && i < rem.length; i++, used++) out[rem[i][0]]++;
+  return out;
+}
+function netBalances(group) {
+  const net = {}; group.members.forEach(m => net[m.id] = 0);
+  for (const e of groupExpenses(group.id)) {
+    for (const [k, v] of Object.entries(e.paid || {})) net[k] = (net[k] || 0) + v;
+    for (const [k, v] of Object.entries(e.owed || {})) net[k] = (net[k] || 0) - v;
+  }
+  return net;
+}
+// Fewest transfers: repeatedly match the biggest debtor with the biggest creditor.
+function simplify(net) {
+  const cr = [], dr = [];
+  for (const [k, v] of Object.entries(net)) { if (v > 0) cr.push([k, v]); else if (v < 0) dr.push([k, -v]); }
+  const out = [];
+  while (cr.length && dr.length) {
+    cr.sort((a, b) => b[1] - a[1]); dr.sort((a, b) => b[1] - a[1]);
+    const amt = Math.min(cr[0][1], dr[0][1]);
+    if (amt > 0) out.push({ from: dr[0][0], to: cr[0][0], amount: amt });
+    cr[0][1] -= amt; dr[0][1] -= amt;
+    if (!cr[0][1]) cr.shift(); if (!dr[0][1]) dr.shift();
+  }
+  return out;
+}
+const groupExpenses = gid => Object.values(Store.data.expenses).filter(e => e.groupId === gid).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
+const groupsList = () => Object.values(Store.data.groups).sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
+const memberName = (g, id) => (g.members.find(m => m.id === id) || {}).name || 'Former member';
+const meName = () => LS.get('me', '');
+const meIn = g => { const n = norm(meName()); return n ? g.members.find(m => norm(m.name) === n) : null; };
+
+/* ---------- poker maths ---------- */
+const pIn = p => (p.buyIns || []).reduce((s, v) => s + v, 0);
+const pNet = p => p.cashOut == null ? null : p.cashOut - pIn(p);
+const sessionsList = () => Object.values(Store.data.poker).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
+function leaderboard() {
+  const rows = {};
+  const finals = sessionsList().filter(s => s.status === 'final').reverse();
+  for (const s of finals) for (const p of s.players || []) {
+    const n = pNet(p); if (n == null) continue;
+    const k = norm(p.name);
+    const r = rows[k] || (rows[k] = { name: p.name.trim(), sessions: 0, net: 0, buyin: 0, wins: 0, best: -Infinity, worst: Infinity, hours: 0, hoursNet: 0, streak: 0, cur: s.currency });
+    r.sessions++; r.net += n; r.buyin += pIn(p); if (n > 0) r.wins++;
+    r.best = Math.max(r.best, n); r.worst = Math.min(r.worst, n);
+    if (s.hours > 0) { r.hours += +s.hours; r.hoursNet += n; }
+    r.streak = n > 0 ? (r.streak > 0 ? r.streak + 1 : 1) : n < 0 ? (r.streak < 0 ? r.streak - 1 : -1) : 0;
+    r.cur = s.currency || r.cur;
+  }
+  return Object.values(rows);
+}
+
+/* ---------- ui state ---------- */
+const S = Object.assign({ route: 'home', id: null, tab: 'expenses', ptab: 'sessions', q: '', cat: '', sort: 'net', sortDir: -1 }, LS.get('ui', {}));
+S.q = ''; S.cat = '';
+function go(route, id = null, tab) {
+  S.route = route; S.id = id;
+  if (route === 'group') S.tab = tab || 'expenses';
+  if (route === 'poker' && tab) S.ptab = tab;
+  LS.set('ui', { route: S.route, id: S.id, tab: S.tab, ptab: S.ptab, sort: S.sort, sortDir: S.sortDir });
+  render(); window.scrollTo(0, 0);
+}
+
+/* ---------- render core ---------- */
+let renderQueued = false;
+function render() { if (renderQueued) return; renderQueued = true; requestAnimationFrame(() => { renderQueued = false; renderNow(); }); }
+function keepFocus(container, fn) {
+  const a = document.activeElement, id = a && container.contains(a) && a.id;
+  const sel = id && 'selectionStart' in a ? [a.selectionStart, a.selectionEnd] : null;
+  fn();
+  if (id) { const n = document.getElementById(id); if (n) { n.focus({ preventScroll: true }); if (sel && n.setSelectionRange) try { n.setSelectionRange(sel[0], sel[1]); } catch {} } }
+}
+function renderNow() {
+  renderSide();
+  const main = $('#main');
+  if (!Store.ready) { main.innerHTML = '<div class="loading">Opening your ledger…</div>'; return; }
+  if (S.route === 'group' && !Store.data.groups[S.id]) S.route = 'home';
+  if (S.route === 'session' && !Store.data.poker[S.id]) S.route = 'poker';
+  let html = '';
+  if (S.route === 'home') html = viewHome();
+  else if (S.route === 'group') html = viewGroup(Store.data.groups[S.id]);
+  else if (S.route === 'poker') html = viewPoker();
+  else if (S.route === 'session') html = viewSession(Store.data.poker[S.id]);
+  const banner = !Store.canWrite ? '<div class="banner">You have view-only access. Ask the owner to share it with you as a Contributor to add expenses.</div>' : '';
+  keepFocus(main, () => { main.innerHTML = `<div class="wrap">${banner}${html}</div>`; });
+  if (S.route === 'poker' && S.ptab === 'trends') drawPokerChart();
+  if (sheetState) renderSheet();
+}
+
+function renderSide() {
+  const gs = groupsList();
+  const cur = (r, id) => S.route === r && (id == null || S.id === id) ? 'true' : 'false';
+  keepFocus($('#side'), () => $('#side').innerHTML = `
+    <div class="brand"><b>Evens</b><span>split · settle · poker</span></div>
+    <nav class="nav" aria-label="Main">
+      <button data-go="home" aria-current="${cur('home')}">${I.home}Overview</button>
+      <div class="eyebrow navlabel">Groups</div>
+      ${gs.map(g => `<button class="sub" data-go="group" data-id="${g.id}" aria-current="${cur('group', g.id)}"><span>${esc(g.name)}</span></button>`).join('')}
+      <button class="sub" data-act="new-group" ${Store.canWrite ? '' : 'disabled'}><span>+ New group</span></button>
+      <div class="eyebrow navlabel">Poker</div>
+      <button data-go="poker" aria-current="${S.route === 'poker' || S.route === 'session' ? 'true' : 'false'}">${I.chip}Poker nights</button>
+    </nav>
+    <div class="side-foot">
+      <label class="me-field"><span class="eyebrow">Your name</span><input id="me-input" class="input" placeholder="e.g. Aaryan" value="${esc(meName())}" autocomplete="off"></label>
+      <div class="syncpill"><span class="dot ${Store.mode === 'shared' ? 'on' : ''}"></span>${Store.mode === 'shared' ? 'Synced with everyone you share this with' : Store.mode === 'local' ? 'Saved in this browser only' : 'Connecting…'}</div>
+    </div>`);
+  $('#tabbar').innerHTML = `
+    <button data-go="home" aria-current="${cur('home')}">${I.home}Overview</button>
+    <button data-go="groups" aria-current="${S.route === 'group' || S.route === 'groups' ? 'true' : 'false'}">${I.group}Groups</button>
+    <button data-go="poker" aria-current="${S.route === 'poker' || S.route === 'session' ? 'true' : 'false'}">${I.chip}Poker</button>
+    <button data-act="me" aria-current="false">${I.user}${meName() ? esc(meName().split(' ')[0]) : 'You'}</button>`;
+}
+
+/* ---------- views: overview ---------- */
+function viewHome() {
+  const gs = groupsList(), ss = sessionsList();
+  const me = meName();
+  if (!gs.length && !ss.length) return `
+    <div class="pagehead"><div><div class="eyebrow">Overview</div><h1>Everyone square, nobody keeping score in their head.</h1></div></div>
+    <div class="empty">
+      <h2>Start a ledger</h2>
+      <p>Make a group for a flat, a trip or a regular dinner, then log who paid. Evens works out who owes whom with the fewest payments. Poker nights get their own tracker for buy-ins, rebuys, cash-outs and a running leaderboard.</p>
+      <div class="actions">
+        <button class="btn primary" data-act="new-group" ${Store.canWrite ? '' : 'disabled'}>${I.plus}Create a group</button>
+        <button class="btn" data-act="new-session" ${Store.canWrite ? '' : 'disabled'}>${I.chip}Log a poker night</button>
+        <button class="btn ghost" data-act="load-sample" ${Store.canWrite ? '' : 'disabled'}>Load sample data</button>
+      </div>
+      <div class="feat">
+        <div><b>Five ways to split</b>Equal, exact amounts, percentages, shares, or item by item with tax and tip.</div>
+        <div><b>Fewest payments</b>Balances net out across the whole group, so four people never need six transfers.</div>
+        <div><b>Poker ledger</b>Rebuys, cash-outs and a check that the bank balances. Results roll into a leaderboard.</div>
+        <div><b>Insights</b>Spend by category and month, who fronted the most, and your hourly rate at the table.</div>
+      </div>
+    </div>`;
+
+  // personal totals across groups (per currency)
+  const owed = {}, owe = {};
+  for (const g of gs) { const m = meIn(g); if (!m) continue; const v = netBalances(g)[m.id] || 0; if (v > 0) owed[g.currency] = (owed[g.currency] || 0) + v; if (v < 0) owe[g.currency] = (owe[g.currency] || 0) - v; }
+  const fmtMulti = o => Object.keys(o).length ? Object.entries(o).map(([c, v]) => money(v, c)).join(' + ') : money(0, gs[0]?.currency || 'GBP');
+  const lb = leaderboard(); const myPoker = lb.find(r => norm(r.name) === norm(me));
+  const hasSample = gs.some(g => g.sample) || ss.some(s => s.sample);
+
+  const recent = Object.values(Store.data.expenses).filter(e => Store.data.groups[e.groupId]).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 6);
+  return `
+    <div class="pagehead">
+      <div><div class="eyebrow">Overview</div><h1>${me ? `Hi ${esc(me.split(' ')[0])}.` : 'Your ledger'}</h1>
+      <div class="sub">${me ? '' : 'Set your name in the sidebar (or the You tab) to see what you personally owe and are owed.'}</div></div>
+      <div class="actions">
+        ${hasSample ? `<button class="btn ghost" data-act="clear-sample">Remove sample data</button>` : ''}
+        <button class="btn" data-act="new-session" ${Store.canWrite ? '' : 'disabled'}>${I.chip}Poker night</button>
+        <button class="btn primary" data-act="new-group" ${Store.canWrite ? '' : 'disabled'}>${I.plus}New group</button>
+      </div>
+    </div>
+    ${me ? `<div class="stats">
+      <div class="stat"><span class="eyebrow">You are owed</span><span class="v pos">${fmtMulti(owed)}</span><span class="h">across ${gs.filter(meIn).length} group${gs.filter(meIn).length === 1 ? '' : 's'}</span></div>
+      <div class="stat"><span class="eyebrow">You owe</span><span class="v neg">${fmtMulti(owe)}</span><span class="h">settle from any group's Balances tab</span></div>
+      <div class="stat"><span class="eyebrow">Poker, lifetime</span><span class="v ${myPoker ? (myPoker.net >= 0 ? 'pos' : 'neg') : ''}">${myPoker ? money(myPoker.net, myPoker.cur, true) : '—'}</span><span class="h">${myPoker ? `${myPoker.sessions} session${myPoker.sessions === 1 ? '' : 's'}, ${Math.round(myPoker.wins / myPoker.sessions * 100)}% winning` : 'no finished sessions under your name'}</span></div>
+    </div>` : ''}
+    <section>
+      <div class="cardhead"><h2>Groups</h2></div>
+      ${gs.length ? `<div class="grid">${gs.map(groupCard).join('')}</div>` : `<div class="empty"><p>No groups yet. A group is any set of people who share costs.</p><button class="btn primary" data-act="new-group">${I.plus}Create a group</button></div>`}
+    </section>
+    <div class="cols">
+      <section class="card">
+        <div class="cardhead"><h2>Latest activity</h2></div>
+        ${recent.length ? `<div class="list">${recent.map(e => expenseRow(e, Store.data.groups[e.groupId], true)).join('')}</div>` : '<p class="mut">Nothing logged yet.</p>'}
+      </section>
+      <section class="felt">
+        <div class="eyebrow">Poker leaderboard</div>
+        ${lb.length ? `<div class="list">${lb.sort((a, b) => b.net - a.net).slice(0, 5).map((r, i) => `
+          <div style="display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid color-mix(in srgb,var(--felt-ink) 14%,transparent)">
+            <span style="font:400 18px var(--f-display);opacity:.7">${i + 1}</span>
+            <span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name)}</span>
+            <span class="amt">${money(r.net, r.cur, true)}</span></div>`).join('')}</div>` : '<p style="margin:0;opacity:.8">Finish a poker night to start the table.</p>'}
+        <div class="actions"><button class="btn" data-go="poker">Open poker</button><button class="btn brass" data-act="new-session" ${Store.canWrite ? '' : 'disabled'}>${I.plus}New night</button></div>
+      </section>
+    </div>`;
+}
+function groupCard(g) {
+  const ex = groupExpenses(g.id), spent = ex.filter(e => e.kind !== 'payment').reduce((s, e) => s + e.amount, 0);
+  const net = netBalances(g), m = meIn(g);
+  const open = Object.values(net).filter(v => v !== 0).length;
+  let status;
+  if (m) { const v = net[m.id] || 0; status = v === 0 ? '<span class="mut">You are settled up</span>' : v > 0 ? `<span class="pos">You're owed <b class="amt">${money(v, g.currency)}</b></span>` : `<span class="neg">You owe <b class="amt">${money(-v, g.currency)}</b></span>`; }
+  else status = open ? `<span>${open} open balance${open === 1 ? '' : 's'}</span>` : '<span class="pos">All settled</span>';
+  return `<button class="gcard" data-go="group" data-id="${g.id}">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><h3>${esc(g.name)}</h3>${g.sample ? '<span class="pill sample">Sample</span>' : ''}</div>
+    <div class="avs">${g.members.slice(0, 6).map(x => av(x.name)).join('')}${g.members.length > 6 ? `<span class="av" style="background:var(--muted)">+${g.members.length - 6}</span>` : ''}</div>
+    <div class="meta"><div style="font-size:14px">${status}</div><div style="text-align:right"><div class="eyebrow">Spent</div><div class="amt">${money(spent, g.currency)}</div></div></div>
+  </button>`;
+}
+function expenseRow(e, g, showGroup = false) {
+  const [y, m, d] = (e.date || today()).split('-');
+  const me = meIn(g);
+  if (e.kind === 'payment') {
+    const from = Object.keys(e.paid)[0], to = Object.keys(e.owed)[0];
+    return `<button class="erow pay" data-act="edit-exp" data-id="${e.id}">
+      <span class="paymark">${I.check}</span>
+      <span style="min-width:0"><div class="etitle">${esc(memberName(g, from))} paid ${esc(memberName(g, to))}</div><div class="esub">${showGroup ? esc(g.name) + ' · ' : ''}${fdate(e.date)}</div></span>
+      <span class="eright"><span class="amt">${money(e.amount, g.currency)}</span><small>settlement</small></span></button>`;
+  }
+  const payers = Object.keys(e.paid || {});
+  const payerTxt = payers.length > 1 ? `${payers.length} people paid` : `${esc(memberName(g, payers[0]))} paid ${money(e.amount, g.currency)}`;
+  let right = `<span class="amt">${money(e.amount, g.currency)}</span><small>${esc((CATS[e.category] || CATS.other)[0])}</small>`;
+  if (me) {
+    const v = (e.paid[me.id] || 0) - (e.owed[me.id] || 0);
+    right = v === 0 ? `<small>not involved</small><span class="amt mut">${money(0, g.currency)}</span>` : v > 0 ? `<small>you lent</small><span class="amt pos">${money(v, g.currency)}</span>` : `<small>you borrowed</small><span class="amt neg">${money(-v, g.currency)}</span>`;
+  }
+  return `<button class="erow" data-act="edit-exp" data-id="${e.id}">
+    <span class="date"><small>${MONTHS[+m - 1]}</small><b>${+d}</b></span>
+    <span style="min-width:0"><div class="etitle">${esc(e.desc)}</div><div class="esub">${showGroup ? esc(g.name) + ' · ' : catTag(e.category) + ' · '}${payerTxt}${e.split?.type === 'itemized' ? ' · itemized' : ''}</div></span>
+    <span class="eright">${right}</span></button>`;
+}
+
+/* ---------- views: group ---------- */
+function viewGroup(g) {
+  const tabs = [['expenses', 'Expenses'], ['balances', 'Balances'], ['insights', 'Insights'], ['settings', 'Members & settings']];
+  const ex = groupExpenses(g.id), spent = ex.filter(e => e.kind !== 'payment').reduce((s, e) => s + e.amount, 0);
+  let body = '';
+  if (S.tab === 'expenses') body = groupExpensesTab(g, ex);
+  else if (S.tab === 'balances') body = groupBalancesTab(g);
+  else if (S.tab === 'insights') body = groupInsightsTab(g, ex);
+  else body = groupSettingsTab(g);
+  return `
+    <button class="btn ghost sm mobile-only" data-go="groups" style="align-self:flex-start">${I.back}All groups</button>
+    <div class="pagehead">
+      <div style="min-width:0"><div class="eyebrow">${g.members.length} members · ${g.currency} · ${money(spent, g.currency)} spent</div><h1 style="overflow-wrap:anywhere">${esc(g.name)}</h1>
+        <div class="avs" style="margin-top:10px">${g.members.map(m => av(m.name)).join('')}</div></div>
+      <div class="actions">
+        <button class="btn" data-act="settle" ${Store.canWrite ? '' : 'disabled'}>Settle up</button>
+        <button class="btn primary" data-act="add-exp" ${Store.canWrite ? '' : 'disabled'}>${I.plus}Add expense</button>
+      </div>
+    </div>
+    <div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" aria-selected="${S.tab === k}" data-tab="${k}">${l}</button>`).join('')}</div>
+    ${body}`;
+}
+function groupExpensesTab(g, ex) {
+  if (!ex.length) return `<div class="empty"><h2>No expenses yet</h2><p>Add the first thing someone paid for. Rent, a dinner bill, a taxi: anything shared.</p><button class="btn primary" data-act="add-exp" ${Store.canWrite ? '' : 'disabled'}>${I.plus}Add expense</button></div>`;
+  const q = norm(S.q);
+  const list = ex.filter(e => (!S.cat || (S.cat === 'payment' ? e.kind === 'payment' : e.category === S.cat && e.kind !== 'payment')) &&
+    (!q || norm(e.desc).includes(q) || norm(e.notes).includes(q) || Object.keys(e.paid || {}).some(id => norm(memberName(g, id)).includes(q))));
+  let lastM = '', html = '';
+  for (const e of list) {
+    const mk = (e.date || '').slice(0, 7);
+    if (mk !== lastM) { lastM = mk; const [y, m] = mk.split('-'); html += `<div class="month eyebrow">${MONTHS[+m - 1]} ${y}</div>`; }
+    html += expenseRow(e, g);
+  }
+  return `
+    <div class="toolbar">
+      <input id="q" class="input" type="search" placeholder="Search descriptions, notes or who paid" value="${esc(S.q)}">
+      <select id="catf" class="input" aria-label="Filter by category">
+        <option value="">All categories</option>${Object.entries(CATS).map(([k, c]) => `<option value="${k}" ${S.cat === k ? 'selected' : ''}>${c[0]}</option>`).join('')}<option value="payment" ${S.cat === 'payment' ? 'selected' : ''}>Settlements</option>
+      </select>
+    </div>
+    <div class="list">${html || '<p class="mut" style="padding:20px 4px">Nothing matches that search.</p>'}</div>`;
+}
+function groupBalancesTab(g) {
+  const net = netBalances(g), xs = simplify(net);
+  const max = Math.max(1, ...Object.values(net).map(Math.abs));
+  const rows = g.members.map(m => ({ m, v: net[m.id] || 0 })).sort((a, b) => b.v - a.v);
+  return `<div class="cols">
+    <section class="card">
+      <div class="cardhead"><h2>Who's up, who's down</h2><span class="eyebrow">net of everything</span></div>
+      ${rows.map(({ m, v }) => `<div class="balrow">
+        <span class="who">${av(m.name)}<span>${esc(m.name)}</span></span>
+        <span class="divbar" data-tip="${esc(m.name)}|${v >= 0 ? 'is owed' : 'owes'} ${money(Math.abs(v), g.currency)}"><i class="${v >= 0 ? 'p' : 'n'}" style="width:${Math.abs(v) / max * 50}%"></i></span>
+        <span class="amt ${v > 0 ? 'pos' : v < 0 ? 'neg' : 'mut'}">${money(v, g.currency, true)}</span></div>`).join('')}
+    </section>
+    <section class="card">
+      <div class="cardhead"><h2>Settle with ${xs.length} payment${xs.length === 1 ? '' : 's'}</h2></div>
+      ${xs.length ? xs.map(x => `<div class="xfer">
+        <span class="names">${av(memberName(g, x.from))}<b>${esc(memberName(g, x.from))}</b>${I.arrow}<b>${esc(memberName(g, x.to))}</b></span>
+        <span class="amt">${money(x.amount, g.currency)}</span>
+        <button class="btn sm" data-act="record-xfer" data-from="${x.from}" data-to="${x.to}" data-amt="${x.amount}" ${Store.canWrite ? '' : 'disabled'}>Record</button></div>`).join('')
+        : `<div class="settled">${I.check}Everyone is square.</div>`}
+      ${xs.length ? `<p class="mut" style="font-size:13px;margin:12px 0 0">Debts are netted across the group, so nobody pays someone who would only pay it on. <button class="btn ghost sm" data-act="copy-xfers">Copy as text</button></p>` : ''}
+    </section></div>`;
+}
+function groupInsightsTab(g, ex) {
+  const spend = ex.filter(e => e.kind !== 'payment');
+  if (!spend.length) return '<div class="empty"><p>Insights appear once the group has a few expenses.</p></div>';
+  const total = spend.reduce((s, e) => s + e.amount, 0);
+  const byCat = {}; spend.forEach(e => byCat[e.category || 'other'] = (byCat[e.category || 'other'] || 0) + e.amount);
+  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]); const cmax = cats[0][1];
+  // last 12 months
+  const now = new Date(); const months = [];
+  for (let i = 11; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); months.push([d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'), 0]); }
+  const mi = Object.fromEntries(months.map((m, i) => [m[0], i]));
+  spend.forEach(e => { const k = (e.date || '').slice(0, 7); if (k in mi) months[mi[k]][1] += e.amount; });
+  const mmax = Math.max(1, ...months.map(m => m[1]));
+  const thisM = months[11][1], lastM = months[10][1];
+  const per = g.members.map(m => { let paid = 0, share = 0; spend.forEach(e => { paid += e.paid[m.id] || 0; share += e.owed[m.id] || 0; }); return { m, paid, share }; }).sort((a, b) => b.paid - a.paid);
+  const biggest = spend.slice().sort((a, b) => b.amount - a.amount)[0];
+  return `
+    <div class="stats">
+      <div class="stat"><span class="eyebrow">Total spend</span><span class="v">${money(total, g.currency)}</span><span class="h">${spend.length} expenses</span></div>
+      <div class="stat"><span class="eyebrow">This month</span><span class="v">${money(thisM, g.currency)}</span><span class="h">${lastM ? `${thisM >= lastM ? '+' : '−'}${Math.abs(Math.round((thisM - lastM) / lastM * 100))}% vs last month` : 'nothing logged last month'}</span></div>
+      <div class="stat"><span class="eyebrow">Per person</span><span class="v">${money(Math.round(total / g.members.length), g.currency)}</span><span class="h">average share</span></div>
+      <div class="stat"><span class="eyebrow">Biggest bill</span><span class="v">${money(biggest.amount, g.currency)}</span><span class="h" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(biggest.desc)}</span></div>
+    </div>
+    <div class="cols">
+      <section class="card"><div class="cardhead"><h2>Monthly spend</h2><span class="eyebrow">last 12 months</span></div>
+        <div class="vbars">${months.map(([k, v]) => `<div class="col" data-tip="${MONTHS[+k.slice(5) - 1]} ${k.slice(0, 4)}|${money(v, g.currency)}"><i style="height:${v / mmax * 100}%"></i></div>`).join('')}</div>
+        <div class="vlabels">${months.map(([k], i) => `<span>${i % 2 === 1 || months.length < 7 ? MONTHS[+k.slice(5) - 1].slice(0, 3) : ''}</span>`).join('')}</div>
+      </section>
+      <section class="card"><div class="cardhead"><h2>By category</h2></div>
+        <div class="hbars">${cats.map(([k, v]) => `<div class="hbar" data-tip="${esc((CATS[k] || CATS.other)[0])}|${money(v, g.currency)} · ${Math.round(v / total * 100)}%">
+          <span class="lab">${esc((CATS[k] || CATS.other)[0])}</span><span class="track"><span class="fill" style="display:block;width:${v / cmax * 100}%;background:var(--s1)"></span></span><span class="amt r" style="text-align:right">${money(v, g.currency)}</span></div>`).join('')}</div>
+      </section>
+    </div>
+    <section class="card"><div class="cardhead"><h2>Paid vs. share</h2><span class="eyebrow">who fronted the money</span></div>
+      <div class="tablewrap"><table><thead><tr><th>Member</th><th class="r">Paid</th><th class="r">Their share</th><th class="r">Difference</th></tr></thead>
+      <tbody>${per.map(({ m, paid, share }) => `<tr class="${meIn(g)?.id === m.id ? 'me' : ''}"><td><span class="who">${av(m.name)}<span>${esc(m.name)}</span></span></td><td class="r amt">${money(paid, g.currency)}</td><td class="r amt">${money(share, g.currency)}</td><td class="r amt ${paid - share > 0 ? 'pos' : paid - share < 0 ? 'neg' : ''}">${money(paid - share, g.currency, true)}</td></tr>`).join('')}</tbody></table></div>
+    </section>`;
+}
+function groupSettingsTab(g) {
+  const used = new Set(); groupExpenses(g.id).forEach(e => { Object.keys(e.paid || {}).forEach(k => used.add(k)); Object.keys(e.owed || {}).forEach(k => used.add(k)); });
+  return `<div class="cols">
+    <section class="card"><div class="cardhead"><h2>Members</h2></div>
+      <div class="list">${g.members.map(m => `<div class="balrow" style="grid-template-columns:auto minmax(0,1fr) auto">
+        ${av(m.name)}<input class="input" id="mn-${m.id}" data-rename="${m.id}" value="${esc(m.name)}" aria-label="Name" ${Store.canWrite ? '' : 'disabled'}>
+        <button class="btn sm ghost" data-act="rm-member" data-id="${m.id}" ${used.has(m.id) || !Store.canWrite ? 'disabled title="Members with expenses can\'t be removed"' : ''}>Remove</button></div>`).join('')}</div>
+      <form class="row" data-form="add-member" style="margin-top:12px"><input class="input" id="new-member" placeholder="Add someone by name" ${Store.canWrite ? '' : 'disabled'}><button class="btn" style="flex:0 0 auto" ${Store.canWrite ? '' : 'disabled'}>Add</button></form>
+    </section>
+    <section class="card" style="display:flex;flex-direction:column;gap:14px"><div class="cardhead" style="margin:0"><h2>Group</h2></div>
+      <label class="f">Name<input class="input" id="g-name" data-gfield="name" value="${esc(g.name)}" ${Store.canWrite ? '' : 'disabled'}></label>
+      <label class="f">Currency<select class="input" id="g-cur" data-gfield="currency" ${Store.canWrite ? '' : 'disabled'}>${CURRENCIES.map(c => `<option ${c === g.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+      <div class="actions"><button class="btn" data-act="export-csv">Export CSV</button></div>
+      ${confirmDel === g.id ? `<div class="confirm"><b>Delete “${esc(g.name)}” and all ${groupExpenses(g.id).length} of its expenses?</b><span style="font-size:14px">This can't be undone and removes it for everyone.</span><div class="actions"><button class="btn danger" data-act="del-group-yes">Delete for good</button><button class="btn" data-act="del-cancel">Keep it</button></div></div>`
+        : `<button class="btn danger" data-act="del-group" style="align-self:flex-start" ${Store.canWrite ? '' : 'disabled'}>Delete group</button>`}
+    </section></div>`;
+}
+let confirmDel = null;
+
+/* ---------- views: poker ---------- */
+function viewPoker() {
+  const ss = sessionsList(), lb = leaderboard();
+  const live = ss.filter(s => s.status === 'live');
+  const tabs = [['sessions', 'Sessions'], ['leaderboard', 'Leaderboard'], ['trends', 'Trends']];
+  let body = '';
+  if (!ss.length) body = `<div class="empty"><h2>Deal the first hand</h2><p>Log a home game or a casino session: who bought in, every rebuy, what they cashed out. Evens checks the bank balances and tells losers exactly who to pay.</p><button class="btn brass" data-act="new-session" ${Store.canWrite ? '' : 'disabled'}>${I.plus}New poker night</button></div>`;
+  else if (S.ptab === 'sessions') body = `<div class="list" style="gap:10px">${ss.map(sessionCard).join('')}</div>`;
+  else if (S.ptab === 'leaderboard') body = leaderboardTable(lb);
+  else body = trendsTab(lb);
+  const totalPot = ss.filter(s => s.status === 'final').reduce((t, s) => t + (s.players || []).reduce((a, p) => a + pIn(p), 0), 0);
+  const cur = ss[0]?.currency || 'GBP';
+  return `
+    <div class="pagehead">
+      <div><div class="eyebrow">Poker tracker</div><h1>Poker nights</h1><div class="sub">${ss.length} session${ss.length === 1 ? '' : 's'} · ${lb.length} player${lb.length === 1 ? '' : 's'} · ${money(totalPot, cur)} total action</div></div>
+      <div class="actions"><button class="btn brass" data-act="new-session" ${Store.canWrite ? '' : 'disabled'}>${I.plus}New session</button></div>
+    </div>
+    ${live.length ? `<div class="felt" style="flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between">
+      <div><div class="eyebrow">Live now</div><div style="font:400 24px var(--f-display)">${esc(live[0].title || 'Poker night')}</div><div style="opacity:.8;font-size:14px">${(live[0].players || []).length} players · ${money((live[0].players || []).reduce((a, p) => a + pIn(p), 0), live[0].currency)} on the table</div></div>
+      <button class="btn brass" data-go="session" data-id="${live[0].id}">Open table</button></div>` : ''}
+    ${ss.length ? `<div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" aria-selected="${S.ptab === k}" data-ptab="${k}">${l}</button>`).join('')}</div>` : ''}
+    ${body}`;
+}
+function sessionCard(s) {
+  const ps = s.players || [], pot = ps.reduce((a, p) => a + pIn(p), 0);
+  const top = ps.filter(p => pNet(p) != null).sort((a, b) => pNet(b) - pNet(a))[0];
+  const me = ps.find(p => norm(p.name) === norm(meName()));
+  const [y, m, d] = (s.date || today()).split('-');
+  const right = me && pNet(me) != null ? `<span class="amt ${pNet(me) >= 0 ? 'pos' : 'neg'}">${money(pNet(me), s.currency, true)}</span><small>you</small>` : `<span class="amt">${money(pot, s.currency)}</span><small>in play</small>`;
+  return `<button class="scard" data-go="session" data-id="${s.id}">
+    <span class="date"><small>${MONTHS[+m - 1]}</small><b>${+d}</b><small>${y}</small></span>
+    <span style="min-width:0;display:flex;flex-direction:column;gap:3px">
+      <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b style="font-size:16px">${esc(s.title || 'Poker night')}</b><span class="pill ${s.status === 'live' ? 'live' : 'final'}">${s.status === 'live' ? 'Live' : 'Final'}</span>${s.sample ? '<span class="pill sample">Sample</span>' : ''}</span>
+      <span class="esub">${esc([s.game, s.stakes, s.location].filter(Boolean).join(' · '))}${s.hours ? ` · ${s.hours}h` : ''}</span>
+      <span class="esub">${ps.length} players${top && pNet(top) > 0 ? ` · ${esc(top.name)} won ${money(pNet(top), s.currency)}` : ''}</span>
+    </span>
+    <span class="eright">${right}</span></button>`;
+}
+function leaderboardTable(lb) {
+  if (!lb.length) return '<div class="empty"><p>Finish a session (mark it Final) to put players on the board.</p></div>';
+  const cols = [['name', 'Player'], ['sessions', 'Sessions', 1], ['net', 'Net', 1], ['avg', 'Per session', 1], ['roi', 'ROI', 1], ['winp', 'Win rate', 1], ['hourly', 'Per hour', 1], ['best', 'Best', 1], ['worst', 'Worst', 1], ['streak', 'Streak', 1]];
+  const rows = lb.map(r => ({ ...r, avg: r.net / r.sessions, roi: r.buyin ? r.net / r.buyin : 0, winp: r.wins / r.sessions, hourly: r.hours ? r.hoursNet / r.hours : null }));
+  rows.sort((a, b) => { const k = S.sort; const av = a[k] ?? -Infinity, bv = b[k] ?? -Infinity; return (typeof av === 'string' ? av.localeCompare(bv) : av - bv) * S.sortDir; });
+  const me = norm(meName());
+  const c = rows[0].cur;
+  const sgn = v => v > 0 ? 'pos' : v < 0 ? 'neg' : '';
+  return `<section class="card"><div class="tablewrap"><table>
+    <thead><tr><th></th>${cols.map(([k, l, r]) => `<th class="${r ? 'r' : ''}"><button data-sort="${k}">${l}${S.sort === k ? (S.sortDir < 0 ? ' ↓' : ' ↑') : ''}</button></th>`).join('')}</tr></thead>
+    <tbody>${rows.map((r, i) => `<tr class="${norm(r.name) === me ? 'me' : ''}">
+      <td class="rank">${i + 1}</td><td><span class="who">${av(r.name)}<span>${esc(r.name)}</span></span></td>
+      <td class="r amt">${r.sessions}</td><td class="r amt ${sgn(r.net)}"><b>${money(r.net, c, true)}</b></td>
+      <td class="r amt ${sgn(r.avg)}">${money(Math.round(r.avg), c, true)}</td><td class="r amt ${sgn(r.roi)}">${(r.roi * 100).toFixed(0)}%</td>
+      <td class="r amt">${Math.round(r.winp * 100)}%</td><td class="r amt ${sgn(r.hourly)}">${r.hourly == null ? '—' : money(Math.round(r.hourly), c, true)}</td>
+      <td class="r amt pos">${money(r.best, c, true)}</td><td class="r amt neg">${money(r.worst, c, true)}</td>
+      <td class="r amt">${r.streak > 0 ? `W${r.streak}` : r.streak < 0 ? `L${-r.streak}` : '—'}</td></tr>`).join('')}</tbody></table></div>
+    <p class="mut" style="font-size:13px;margin:10px 0 0">Players are matched by name across sessions. Per-hour uses sessions with a length logged. Only Final sessions count.</p></section>`;
+}
+function trendsTab(lb) {
+  const me = lb.find(r => norm(r.name) === norm(meName()));
+  return `${me ? `<div class="stats">
+      <div class="stat"><span class="eyebrow">Your net</span><span class="v ${me.net >= 0 ? 'pos' : 'neg'}">${money(me.net, me.cur, true)}</span><span class="h">${me.sessions} sessions</span></div>
+      <div class="stat"><span class="eyebrow">Win rate</span><span class="v">${Math.round(me.wins / me.sessions * 100)}%</span><span class="h">${me.wins} winning nights</span></div>
+      <div class="stat"><span class="eyebrow">Per hour</span><span class="v">${me.hours ? money(Math.round(me.hoursNet / me.hours), me.cur, true) : '—'}</span><span class="h">${me.hours ? me.hours + ' hours logged' : 'log session length to see this'}</span></div>
+      <div class="stat"><span class="eyebrow">Best night</span><span class="v pos">${money(me.best, me.cur, true)}</span><span class="h">worst ${money(me.worst, me.cur, true)}</span></div>
+    </div>` : ''}
+    <section class="card"><div class="cardhead"><h2>Cumulative winnings</h2><span class="eyebrow">top players, session by session</span></div>
+      <div class="chart" id="pchart"></div><div class="legend" id="plegend"></div></section>`;
+}
+function drawPokerChart() {
+  const box = $('#pchart'); if (!box) return;
+  const finals = sessionsList().filter(s => s.status === 'final').reverse();
+  if (!finals.length) { box.innerHTML = '<p class="mut">No finished sessions yet.</p>'; return; }
+  const lb = leaderboard();
+  const meN = norm(meName());
+  let pick = lb.slice().sort((a, b) => b.sessions - a.sessions || b.net - a.net).slice(0, 6);
+  const meRow = lb.find(r => norm(r.name) === meN);
+  if (meRow && !pick.includes(meRow)) pick = [...pick.slice(0, 5), meRow];
+  // fixed colour per player by alphabetical order of the whole field, so filters never repaint anyone
+  const order = lb.map(r => norm(r.name)).sort();
+  const colorOf = n => `var(--s${(order.indexOf(n) % 6) + 1})`;
+  const series = pick.map(r => { let c = 0; const pts = [0]; finals.forEach(s => { const p = (s.players || []).find(p => norm(p.name) === norm(r.name)); if (p && pNet(p) != null) c += pNet(p); pts.push(c); }); return { name: r.name, key: norm(r.name), pts, color: colorOf(norm(r.name)) }; });
+  const W = box.clientWidth || 600, H = 300, L = 64, R = 16, T = 12, B = 30;
+  const all = series.flatMap(s => s.pts); let lo = Math.min(0, ...all), hi = Math.max(0, ...all);
+  const step = niceStep((hi - lo) / 5 || 100); lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step; if (hi === lo) hi = lo + step;
+  const n = finals.length;
+  const x = i => L + (W - L - R) * (i / n), y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+  const cur = finals[finals.length - 1].currency || 'GBP';
+  let g = '';
+  for (let v = lo; v <= hi + 1; v += step) g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="${v === 0 ? 1.5 : 1}" ${v === 0 ? '' : 'stroke-dasharray="2 4"'}/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${money(v, cur, true).replace(/\.00$/, '')}</text>`;
+  const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor((W - L) / 70))));
+  finals.forEach((s, i) => { if ((i + 1) % every === 0 || i === n - 1) { const [yy, mm, dd] = s.date.split('-'); g += `<text x="${x(i + 1)}" y="${H - 8}" text-anchor="middle">${+dd} ${MONTHS[+mm - 1]}</text>`; } });
+  for (const s of series) {
+    const d = s.pts.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('');
+    const isMe = s.key === meN;
+    g += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${isMe ? 3 : 2}" stroke-linejoin="round" stroke-linecap="round"/>`;
+    g += `<circle cx="${x(n)}" cy="${y(s.pts[n])}" r="4.5" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`;
+  }
+  g += `<line id="xh" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--muted)" stroke-width="1" visibility="hidden"/><rect id="hit" x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent"/>`;
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Cumulative poker winnings by player">${g}</svg>`;
+  $('#plegend').innerHTML = series.map(s => `<span><i style="background:${s.color}"></i>${esc(s.name)} <b class="amt">${money(s.pts[n], cur, true)}</b></span>`).join('');
+  const svg = box.querySelector('svg'), xh = svg.querySelector('#xh'), tip = $('#tip');
+  const move = ev => {
+    const r = svg.getBoundingClientRect(); const px = (ev.clientX - r.left) * (W / r.width);
+    const i = Math.max(0, Math.min(n, Math.round((px - L) / ((W - L - R) / n))));
+    xh.setAttribute('x1', x(i)); xh.setAttribute('x2', x(i)); xh.setAttribute('visibility', 'visible');
+    const sess = finals[i - 1];
+    tip.innerHTML = `<div class="t">${sess ? esc(sess.title || 'Session') + ' · ' + fdate(sess.date) : 'Start'}</div>` + series.slice().sort((a, b) => b.pts[i] - a.pts[i]).map(s => `<div class="r"><span><i style="background:${s.color}"></i>${esc(s.name)}</span><span>${money(s.pts[i], cur, true)}</span></div>`).join('');
+    showTip(ev.clientX, ev.clientY);
+  };
+  svg.addEventListener('pointermove', move);
+  svg.addEventListener('pointerleave', () => { xh.setAttribute('visibility', 'hidden'); tip.hidden = true; });
+}
+function niceStep(raw) { const p = Math.pow(10, Math.floor(Math.log10(Math.abs(raw) || 1))); const f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
+
+/* ---------- views: poker session ---------- */
+function viewSession(s) {
+  const ps = s.players || [], live = s.status === 'live', w = Store.canWrite;
+  const tin = ps.reduce((a, p) => a + pIn(p), 0), tout = ps.reduce((a, p) => a + (p.cashOut || 0), 0);
+  const allOut = ps.length && ps.every(p => p.cashOut != null);
+  const diff = tout - tin;
+  const nets = {}; ps.forEach((p, i) => { const n = pNet(p); if (n != null) nets[i] = n; });
+  const xs = allOut && diff === 0 ? simplify(nets) : [];
+  const known = [...new Set(Object.values(Store.data.poker).flatMap(x => (x.players || []).map(p => p.name.trim())))].filter(n => !ps.some(p => norm(p.name) === norm(n)));
+  const c = s.currency || 'GBP';
+  return `
+    <button class="btn ghost sm" data-go="poker" style="align-self:flex-start">${I.back}All sessions</button>
+    <div class="felt">
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start">
+        <div style="min-width:0"><div class="eyebrow">${fdate(s.date)}${s.location ? ' · ' + esc(s.location) : ''}</div>
+          <div class="big" style="overflow-wrap:anywhere">${esc(s.title || 'Poker night')}</div>
+          <div style="opacity:.85;font-size:14px;margin-top:6px">${esc([s.game, s.stakes].filter(Boolean).join(' · '))}${s.hours ? ` · ${s.hours} hours` : ''}</div></div>
+        <span class="pill ${live ? 'live' : 'final'}" style="${live ? '' : 'background:color-mix(in srgb,var(--felt-ink) 15%,transparent);color:var(--felt-ink)'}">${live ? 'Live' : 'Final'}</span>
+      </div>
+      <div style="display:flex;gap:28px;flex-wrap:wrap">
+        <div><div class="eyebrow">On the table</div><div class="amt" style="font-size:22px">${money(tin, c)}</div></div>
+        <div><div class="eyebrow">Cashed out</div><div class="amt" style="font-size:22px">${money(tout, c)}</div></div>
+        <div><div class="eyebrow">Default buy-in</div><div class="amt" style="font-size:22px">${money(s.defaultBuyIn || 0, c)}</div></div>
+      </div>
+      <div class="actions" style="position:relative;z-index:1">
+        <button class="btn" data-act="edit-session" ${w ? '' : 'disabled'}>Edit details</button>
+        ${live ? `<button class="btn brass" data-act="finish-session" ${w ? '' : 'disabled'}>Finish session</button>` : `<button class="btn" data-act="reopen-session" ${w ? '' : 'disabled'}>Reopen</button>`}
+        <button class="btn" data-act="copy-results">Copy results</button>
+      </div>
+    </div>
+    <section class="card">
+      <div class="cardhead"><h2>Players</h2><span class="mut" style="font-size:13px">Tap a buy-in chip's × to remove it. Cash-out is the chip count at the end, in money.</span></div>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Player</th><th>Buy-ins</th><th class="r">In</th><th class="r">Cash out</th><th class="r">Net</th><th></th></tr></thead>
+        <tbody>${ps.map((p, i) => { const n = pNet(p); return `<tr class="${norm(p.name) === norm(meName()) ? 'me' : ''}">
+          <td><span class="who">${av(p.name)}<span>${esc(p.name)}</span></span></td>
+          <td><div class="chips">${(p.buyIns || []).map((b, j) => `<span class="pchip">${money(b, c).replace(/\.00$/, '')}<button data-act="rm-buy" data-p="${i}" data-b="${j}" aria-label="Remove buy-in" ${w ? '' : 'disabled'}>×</button></span>`).join('')}
+            <button class="addbuy" data-act="add-buy" data-p="${i}" ${w ? '' : 'disabled'}>+ ${money(s.defaultBuyIn || 0, c).replace(/\.00$/, '')}</button>
+            <input class="input" id="cb-${i}" data-custombuy="${i}" placeholder="other" inputmode="decimal" style="width:72px;padding:3px 7px;font-size:12.5px;border-radius:999px" aria-label="Custom buy-in amount" ${w ? '' : 'disabled'}></div></td>
+          <td class="r amt">${money(pIn(p), c)}</td>
+          <td class="r"><input class="input cashin" id="co-${i}" data-cashout="${i}" inputmode="decimal" placeholder="—" value="${p.cashOut == null ? '' : fromCents(p.cashOut)}" aria-label="Cash out for ${esc(p.name)}" ${w ? '' : 'disabled'}></td>
+          <td class="r amt ${n == null ? 'mut' : n > 0 ? 'pos' : n < 0 ? 'neg' : ''}"><b>${n == null ? '—' : money(n, c, true)}</b></td>
+          <td><button class="x" data-act="rm-player" data-p="${i}" aria-label="Remove ${esc(p.name)}" ${w ? '' : 'disabled'}>${I.close}</button></td></tr>`; }).join('')}</tbody></table></div>
+      <form data-form="add-player" class="row" style="margin-top:12px">
+        <input class="input" id="new-player" list="known-players" placeholder="Add player (takes the default buy-in)" autocomplete="off" ${w ? '' : 'disabled'}>
+        <datalist id="known-players">${known.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+        <button class="btn" style="flex:0 0 auto" ${w ? '' : 'disabled'}>Seat player</button></form>
+      ${known.length ? `<div class="chips" style="margin-top:10px"><span class="mut" style="font-size:13px;margin-right:4px">Regulars:</span>${known.slice(0, 10).map(n => `<button class="chip" data-act="seat" data-name="${esc(n)}" ${w ? '' : 'disabled'}>+ ${esc(n)}</button>`).join('')}</div>` : ''}
+    </section>
+    ${ps.length ? `<div class="ledger ${!allOut ? '' : diff === 0 ? 'ok' : 'bad'}">
+      ${!allOut ? `<span>Waiting on ${ps.filter(p => p.cashOut == null).length} cash-out${ps.filter(p => p.cashOut == null).length === 1 ? '' : 's'} before the bank can be checked.</span>`
+        : diff === 0 ? `<b>${I.check.replace('<svg', '<svg width="16" height="16" style="vertical-align:-3px"')} The bank balances.</b><span>${money(tin, c)} in, ${money(tout, c)} out.</span>`
+        : `<b>The bank is ${diff > 0 ? 'over' : 'short'} by ${money(Math.abs(diff), c)}.</b><span>${diff > 0 ? 'More was cashed out than bought in. Check for a missed rebuy or a miscounted stack.' : 'Less was cashed out than bought in. Check stacks, or for chips still on the table.'}</span>`}
+    </div>` : ''}
+    ${xs.length ? `<section class="card"><div class="cardhead"><h2>Who pays whom</h2><span class="eyebrow">${xs.length} payment${xs.length === 1 ? '' : 's'}</span></div>
+      ${xs.map(x => `<div class="xfer" style="grid-template-columns:minmax(0,1fr) auto"><span class="names">${av(ps[x.from].name)}<b>${esc(ps[x.from].name)}</b>${I.arrow}<b>${esc(ps[x.to].name)}</b></span><span class="amt">${money(x.amount, c)}</span></div>`).join('')}
+      <p class="mut" style="font-size:13px;margin:10px 0 0">For games where buy-ins went on credit. If cash went into a bank, the banker pays out cash-outs instead.</p></section>` : ''}
+    ${s.notes ? `<section class="card"><div class="eyebrow">Notes</div><p style="margin:6px 0 0;white-space:pre-wrap">${esc(s.notes)}</p></section>` : ''}
+    <div>${confirmDel === s.id ? `<div class="confirm"><b>Delete this session?</b><span style="font-size:14px">Its results leave the leaderboard for everyone.</span><div class="actions"><button class="btn danger" data-act="del-session-yes">Delete session</button><button class="btn" data-act="del-cancel">Keep it</button></div></div>`
+      : `<button class="btn danger" data-act="del-session" ${w ? '' : 'disabled'}>Delete session</button>`}</div>`;
+}
+
+/* ---------- sheets (forms) ---------- */
+let sheetState = null;
+function openSheet(st) { sheetState = st; const w = $('#sheet'); w.hidden = false; renderSheet(true); }
+function closeSheet() { sheetState = null; $('#sheet').hidden = true; $('#sheet').innerHTML = ''; }
+function renderSheet(first) {
+  const st = sheetState; if (!st) return;
+  let title = '', body = '', foot = '';
+  if (st.type === 'expense') ({ title, body, foot } = expenseSheet(st));
+  else if (st.type === 'group') ({ title, body, foot } = groupSheet(st));
+  else if (st.type === 'settle') ({ title, body, foot } = settleSheet(st));
+  else if (st.type === 'session') ({ title, body, foot } = sessionSheet(st));
+  else if (st.type === 'me') ({ title, body, foot } = meSheet(st));
+  else if (st.type === 'groups') ({ title, body, foot } = groupsSheet());
+  const w = $('#sheet');
+  const scroll = w.querySelector('.body')?.scrollTop || 0;
+  keepFocus(w, () => {
+    w.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}"><header><h2>${esc(title)}</h2><button class="x" data-act="close-sheet" aria-label="Close">${I.close}</button></header>
+      <form class="body" data-form="sheet" novalidate>${body}<button type="submit" hidden></button></form><footer>${foot}</footer></div>`;
+  });
+  const b = w.querySelector('.body'); if (b) b.scrollTop = scroll;
+  if (first) { const f = w.querySelector('[autofocus]'); if (f) f.focus(); }
+}
+
+function newExpenseState(g, e) {
+  if (e) {
+    const sp = e.split || { type: 'equal', parts: Object.fromEntries(Object.keys(e.owed).map(k => [k, 1])) };
+    const multi = Object.keys(e.paid).length > 1;
+    return { type: 'expense', gid: g.id, id: e.id, kind: e.kind || 'expense', desc: e.desc || '', amount: fromCents(e.amount), date: e.date, category: e.category || 'other', notes: e.notes || '',
+      payer: multi ? '__multi' : Object.keys(e.paid)[0], paidMulti: Object.fromEntries(Object.entries(e.paid).map(([k, v]) => [k, fromCents(v)])),
+      split: sp.type, parts: { ...(sp.parts || {}) }, items: (sp.items || []).map(it => ({ ...it, price: fromCents(it.price) })), tax: sp.tax ?? '', tip: sp.tip ?? '', createdAt: e.createdAt };
+  }
+  const me = meIn(g);
+  return { type: 'expense', gid: g.id, kind: 'expense', desc: '', amount: '', date: today(), category: 'food', notes: '', payer: (me || g.members[0]).id, paidMulti: {}, split: 'equal',
+    parts: Object.fromEntries(g.members.map(m => [m.id, 1])), items: [{ id: uid(), name: '', price: '', who: g.members.map(m => m.id) }], tax: '', tip: '' };
+}
+// Returns {total, owed, paid, error, preview}
+function computeExpense(st, g) {
+  const ids = g.members.map(m => m.id);
+  let total = toCents(st.amount), owed = {}, error = '', note = '';
+  if (st.split === 'itemized') {
+    const base = {}; let sub = 0;
+    for (const it of st.items) { const p = toCents(it.price); if (!p) continue; sub += p; if (!it.who.length) { error = `Pick who shared “${it.name || 'an item'}”.`; continue; } const a = allocate(p, Object.fromEntries(it.who.map(k => [k, 1]))); for (const k in a) base[k] = (base[k] || 0) + a[k]; }
+    const extra = Math.round(sub * ((parseFloat(st.tax) || 0) + (parseFloat(st.tip) || 0)) / 100);
+    total = sub + extra;
+    const ex = allocate(extra, base);
+    owed = {}; for (const k in base) owed[k] = base[k] + (ex[k] || 0);
+    if (!sub) error = error || 'Add at least one item with a price.';
+    note = `Items ${money(sub, g.currency)} + tax & tip ${money(extra, g.currency)} = ${money(total, g.currency)}`;
+  } else if (st.split === 'equal') {
+    const w = {}; ids.forEach(k => { if (st.parts[k]) w[k] = 1; });
+    owed = allocate(total, w); if (!Object.keys(w).length) error = 'Pick at least one person to split with.';
+  } else if (st.split === 'exact') {
+    ids.forEach(k => { const v = toCents(st.parts[k] || 0); if (v) owed[k] = v; });
+    const sum = Object.values(owed).reduce((a, b) => a + b, 0);
+    if (sum !== total) error = sum < total ? `${money(total - sum, g.currency)} left to assign.` : `${money(sum - total, g.currency)} over the total.`;
+    else note = 'Amounts add up.';
+  } else if (st.split === 'percent') {
+    const w = {}; let pct = 0; ids.forEach(k => { const v = parseFloat(st.parts[k]) || 0; if (v > 0) { w[k] = Math.round(v * 1000); pct += v; } });
+    owed = allocate(total, w);
+    if (Math.abs(pct - 100) > 0.001) error = `Percentages add up to ${+pct.toFixed(3)}%, not 100%.`; else note = '100% assigned.';
+  } else if (st.split === 'shares') {
+    const w = {}; ids.forEach(k => { const v = parseFloat(st.parts[k]) || 0; if (v > 0) w[k] = Math.round(v * 1000); });
+    owed = allocate(total, w); if (!Object.keys(w).length) error = 'Give at least one person a share.';
+  }
+  let paid = {};
+  if (st.payer === '__multi') {
+    ids.forEach(k => { const v = toCents(st.paidMulti[k] || 0); if (v) paid[k] = v; });
+    const ps = Object.values(paid).reduce((a, b) => a + b, 0);
+    if (!error && ps !== total) error = `Payments add to ${money(ps, g.currency)} but the bill is ${money(total, g.currency)}.`;
+  } else paid = { [st.payer]: total };
+  if (!total && !error) error = 'Enter an amount.';
+  return { total, owed, paid, error, note };
+}
+function expenseSheet(st) {
+  const g = Store.data.groups[st.gid];
+  if (st.kind === 'payment') return settleSheet(st);
+  const r = computeExpense(st, g);
+  const splitBtn = (k, l) => `<button type="button" aria-pressed="${st.split === k}" data-split="${k}">${l}</button>`;
+  let rows = '';
+  if (st.split === 'itemized') {
+    rows = `<div class="splitlist">${st.items.map((it, i) => `<div class="item">
+        <div class="top"><input class="input" id="it-n-${it.id}" data-item="${i}" data-k="name" placeholder="Item, e.g. Margherita" value="${esc(it.name)}"><input class="input" id="it-p-${it.id}" data-item="${i}" data-k="price" inputmode="decimal" placeholder="0.00" value="${esc(it.price)}" style="text-align:right;font-family:var(--f-mono)"><button type="button" class="x" data-act="rm-item" data-i="${i}" aria-label="Remove item">${I.close}</button></div>
+        <div class="chips">${g.members.map(m => `<button type="button" class="chip" aria-pressed="${it.who.includes(m.id)}" data-act="item-who" data-i="${i}" data-m="${m.id}">${esc(m.name)}</button>`).join('')}</div></div>`).join('')}
+      <button type="button" class="btn sm" data-act="add-item" style="align-self:flex-start">${I.plus}Add item</button></div>
+      <div class="row"><label class="f">Tax %<input class="input" id="x-tax" data-f="tax" inputmode="decimal" placeholder="0" value="${esc(st.tax)}"></label><label class="f">Tip / service %<input class="input" id="x-tip" data-f="tip" inputmode="decimal" placeholder="0" value="${esc(st.tip)}"></label></div>
+      <div class="splitlist">${g.members.filter(m => r.owed[m.id]).map(m => `<div class="sl" style="grid-template-columns:minmax(0,1fr) auto"><span class="who">${av(m.name)}<span>${esc(m.name)}</span></span><span class="share">${money(r.owed[m.id], g.currency)}</span></div>`).join('')}</div>`;
+  } else {
+    rows = `<div class="splitlist">${g.members.map(m => {
+      const share = r.owed[m.id] || 0;
+      let ctl = '';
+      if (st.split === 'equal') ctl = `<span></span>`;
+      else ctl = `<input class="input" id="pt-${m.id}" data-part="${m.id}" inputmode="decimal" placeholder="${st.split === 'shares' ? '0' : st.split === 'percent' ? '0 %' : '0.00'}" value="${esc(st.parts[m.id] ?? '')}" aria-label="${st.split} for ${esc(m.name)}">`;
+      return `<div class="sl"><label class="who">${st.split === 'equal' ? `<input type="checkbox" id="eq-${m.id}" data-eq="${m.id}" ${st.parts[m.id] ? 'checked' : ''}>` : ''}${av(m.name)}<span>${esc(m.name)}</span></label>${ctl}<span class="share">${money(share, g.currency)}</span></div>`;
+    }).join('')}</div>`;
+  }
+  const payerSel = `<select class="input" id="x-payer" data-f="payer">${g.members.map(m => `<option value="${m.id}" ${st.payer === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}<option value="__multi" ${st.payer === '__multi' ? 'selected' : ''}>Several people</option></select>`;
+  const body = `
+    <label class="f">What was it?<input class="input" id="x-desc" data-f="desc" placeholder="e.g. Friday takeaway" value="${esc(st.desc)}" autofocus></label>
+    ${st.split === 'itemized' ? `<div class="bigamt"><span>${esc(sym(g.currency))}</span><input value="${fromCents(r.total)}" readonly aria-label="Total from items" tabindex="-1"></div>`
+      : `<div class="bigamt"><span>${esc(sym(g.currency))}</span><input id="x-amt" data-f="amount" inputmode="decimal" placeholder="0.00" value="${esc(st.amount)}" aria-label="Amount"></div>`}
+    <div class="row"><label class="f">Paid by${payerSel}</label><label class="f">Date<input class="input" type="date" id="x-date" data-f="date" value="${esc(st.date)}"></label></div>
+    ${st.payer === '__multi' ? `<div class="splitlist">${g.members.map(m => `<div class="sl" style="grid-template-columns:minmax(0,1fr) 120px"><span class="who">${av(m.name)}<span>${esc(m.name)} paid</span></span><input class="input" id="pm-${m.id}" data-paidm="${m.id}" inputmode="decimal" placeholder="0.00" value="${esc(st.paidMulti[m.id] ?? '')}"></div>`).join('')}</div>` : ''}
+    <div class="f"><span>Category</span><div class="catpick">${Object.entries(CATS).map(([k, c]) => `<button type="button" class="chip" aria-pressed="${st.category === k}" data-cat="${k}"><i style="width:8px;height:8px;border-radius:2px;background:${c[1]}"></i>${c[0]}</button>`).join('')}</div></div>
+    <div class="f"><span>Split</span><div class="seg">${splitBtn('equal', 'Equally')}${splitBtn('exact', 'Exact')}${splitBtn('percent', 'Percent')}${splitBtn('shares', 'Shares')}${splitBtn('itemized', 'Itemized')}</div></div>
+    ${rows}
+    ${r.error ? `<div class="hint bad" role="status">${esc(r.error)}</div>` : r.note ? `<div class="hint ok" role="status">${esc(r.note)}</div>` : ''}
+    <label class="f">Notes<textarea class="input" id="x-notes" data-f="notes" placeholder="Optional">${esc(st.notes)}</textarea></label>`;
+  const foot = `${st.id ? (st.confirm ? `<button type="button" class="btn danger" data-act="del-exp-yes">Confirm delete</button>` : `<button type="button" class="btn danger" data-act="del-exp">Delete</button>`) : ''}
+    <div class="end"><button type="button" class="btn" data-act="close-sheet">Cancel</button><button type="button" class="btn primary" data-act="save-exp" ${r.error || !st.desc.trim() || !Store.canWrite ? 'disabled' : ''}>${st.id ? 'Save changes' : 'Add expense'}</button></div>`;
+  return { title: st.id ? 'Edit expense' : 'Add expense', body, foot };
+}
+function settleSheet(st) {
+  const g = Store.data.groups[st.gid];
+  const opts = sel => g.members.map(m => `<option value="${m.id}" ${sel === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
+  const bad = st.from === st.to ? 'Pick two different people.' : !toCents(st.amount) ? 'Enter an amount.' : '';
+  const net = netBalances(g);
+  const body = `
+    <p class="mut" style="margin:0">Record money that changed hands outside the app: a bank transfer, cash, or a payment app.</p>
+    <div class="row"><label class="f">Who paid<select class="input" id="s-from" data-f="from">${opts(st.from)}</select></label><label class="f">Who received<select class="input" id="s-to" data-f="to">${opts(st.to)}</select></label></div>
+    <div class="bigamt"><span>${esc(sym(g.currency))}</span><input id="s-amt" data-f="amount" inputmode="decimal" placeholder="0.00" value="${esc(st.amount)}" aria-label="Amount" autofocus></div>
+    <label class="f">Date<input class="input" type="date" id="s-date" data-f="date" value="${esc(st.date)}"></label>
+    <div class="hint">${esc(memberName(g, st.from))} ${net[st.from] < 0 ? `owes ${money(-net[st.from], g.currency)} overall` : net[st.from] > 0 ? `is owed ${money(net[st.from], g.currency)} overall` : 'is settled up'}. ${esc(memberName(g, st.to))} ${net[st.to] < 0 ? `owes ${money(-net[st.to], g.currency)}` : net[st.to] > 0 ? `is owed ${money(net[st.to], g.currency)}` : 'is settled up'}.</div>
+    ${bad && st.touched ? `<div class="hint bad">${bad}</div>` : ''}`;
+  const foot = `${st.id ? (st.confirm ? `<button type="button" class="btn danger" data-act="del-exp-yes">Confirm delete</button>` : `<button type="button" class="btn danger" data-act="del-exp">Delete</button>`) : ''}
+    <div class="end"><button type="button" class="btn" data-act="close-sheet">Cancel</button><button type="button" class="btn primary" data-act="save-settle" ${bad || !Store.canWrite ? 'disabled' : ''}>${st.id ? 'Save' : 'Record payment'}</button></div>`;
+  return { title: st.id ? 'Edit payment' : 'Settle up', body, foot };
+}
+function groupSheet(st) {
+  const body = `
+    <label class="f">Group name<input class="input" id="ng-name" data-f="name" placeholder="e.g. Flat 4B, Lisbon trip" value="${esc(st.name)}" autofocus></label>
+    <label class="f">Currency<select class="input" id="ng-cur" data-f="currency">${CURRENCIES.map(c => `<option ${c === st.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+    <div class="f"><span>Members</span>
+      <div class="chips">${st.members.map((m, i) => `<span class="pchip" style="font-family:var(--f-body)">${esc(m)}<button type="button" data-act="ng-rm" data-i="${i}" aria-label="Remove ${esc(m)}">×</button></span>`).join('')}</div>
+      <div class="row"><input class="input" id="ng-add" placeholder="Type a name, press Enter" autocomplete="off"><button type="button" class="btn" data-act="ng-add" style="flex:0 0 auto">Add</button></div>
+      <span class="mut" style="font-weight:400">Tip: paste several names separated by commas.</span></div>`;
+  const ok = st.name.trim() && st.members.length >= 2;
+  const foot = `<span class="mut" style="font-size:13px;align-self:center">${st.members.length < 2 ? 'Add at least two people.' : ''}</span><div class="end"><button type="button" class="btn" data-act="close-sheet">Cancel</button><button type="button" class="btn primary" data-act="save-group" ${ok ? '' : 'disabled'}>Create group</button></div>`;
+  return { title: 'New group', body, foot };
+}
+function sessionSheet(st) {
+  const body = `
+    <label class="f">Name<input class="input" id="ps-title" data-f="title" placeholder="e.g. Friday home game" value="${esc(st.title)}" autofocus></label>
+    <div class="row"><label class="f">Date<input class="input" type="date" id="ps-date" data-f="date" value="${esc(st.date)}"></label><label class="f">Location<input class="input" id="ps-loc" data-f="location" placeholder="Ben's flat" value="${esc(st.location)}"></label></div>
+    <div class="row"><label class="f">Game<select class="input" id="ps-game" data-f="game">${['NL Hold’em cash', 'PLO cash', 'Tournament', 'Sit & Go', 'Mixed games', 'Other'].map(x => `<option ${x === st.game ? 'selected' : ''}>${x}</option>`).join('')}</select></label><label class="f">Blinds / stakes<input class="input" id="ps-stakes" data-f="stakes" placeholder="0.10/0.20" value="${esc(st.stakes)}"></label></div>
+    <div class="row"><label class="f">Default buy-in<input class="input" id="ps-buy" data-f="defaultBuyIn" inputmode="decimal" value="${esc(st.defaultBuyIn)}"></label><label class="f">Currency<select class="input" id="ps-cur" data-f="currency">${CURRENCIES.map(c => `<option ${c === st.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label><label class="f">Hours played<input class="input" id="ps-hours" data-f="hours" inputmode="decimal" placeholder="e.g. 4.5" value="${esc(st.hours)}"></label></div>
+    ${!st.id ? `<label class="f">Players<input class="input" id="ps-players" data-f="playersTxt" placeholder="Comma-separated, e.g. Ana, Ben, Dev" value="${esc(st.playersTxt)}"><span class="mut" style="font-weight:400">Everyone starts with one default buy-in. Add more players or rebuys at the table.</span></label>` : ''}
+    <label class="f">Notes<textarea class="input" id="ps-notes" data-f="notes" placeholder="Big hands, who brought snacks…">${esc(st.notes)}</textarea></label>`;
+  const foot = `<div class="end"><button type="button" class="btn" data-act="close-sheet">Cancel</button><button type="button" class="btn brass" data-act="save-session" ${Store.canWrite ? '' : 'disabled'}>${st.id ? 'Save details' : 'Start session'}</button></div>`;
+  return { title: st.id ? 'Session details' : 'New poker session', body, foot };
+}
+function meSheet(st) {
+  return { title: 'You', body: `<label class="f">Your name<input class="input" id="me-sheet" data-f="name" value="${esc(st.name)}" placeholder="Match how you appear in groups" autofocus></label>
+    <p class="mut" style="margin:0">Evens matches this to member and player names, so it can show your own balances and poker results. It's remembered on this device only.</p>
+    <div class="syncpill"><span class="dot ${Store.mode === 'shared' ? 'on' : ''}"></span>${Store.mode === 'shared' ? 'Data syncs with everyone you share this page with.' : 'Data is saved in this browser only.'}</div>`,
+    foot: `<div class="end"><button type="button" class="btn primary" data-act="save-me">Done</button></div>` };
+}
+function groupsSheet() {
+  const gs = groupsList();
+  return { title: 'Groups', body: gs.length ? gs.map(groupCard).join('') : '<p class="mut">No groups yet.</p>', foot: `<div class="end"><button type="button" class="btn primary" data-act="new-group" ${Store.canWrite ? '' : 'disabled'}>${I.plus}New group</button></div>` };
+}
+
+/* ---------- actions ---------- */
+function curGroup() { return Store.data.groups[sheetState?.gid || S.id]; }
+function touchGroup(gid) { const g = Store.data.groups[gid]; if (g) Store.put('groups', gid, { ...g, updatedAt: Date.now() }); }
+function saveSession(s, debounce = 0) { Store.put('poker', s.id, { ...s, updatedAt: Date.now() }, debounce); }
+
+const actions = {
+  'new-group': () => openSheet({ type: 'group', name: '', currency: groupsList()[0]?.currency || 'GBP', members: meName() ? [meName()] : [] }),
+  'ng-add': () => { const inp = $('#ng-add'); addNames(inp.value); inp.value = ''; inp.focus(); },
+  'ng-rm': el => { sheetState.members.splice(+el.dataset.i, 1); renderSheet(); },
+  'save-group': () => {
+    const st = sheetState, id = uid();
+    const pending = $('#ng-add')?.value; if (pending) addNames(pending);
+    Store.put('groups', id, { name: st.name.trim(), currency: st.currency, members: st.members.map(n => ({ id: uid(), name: n })), createdAt: Date.now(), updatedAt: Date.now() });
+    closeSheet(); go('group', id); toast('Group created');
+  },
+  'add-exp': () => openSheet(newExpenseState(curGroup())),
+  'edit-exp': el => { const e = Store.data.expenses[el.dataset.id]; if (!e) return; const g = Store.data.groups[e.groupId];
+    if (e.kind === 'payment') openSheet({ type: 'settle', gid: g.id, id: e.id, kind: 'payment', from: Object.keys(e.paid)[0], to: Object.keys(e.owed)[0], amount: fromCents(e.amount), date: e.date, createdAt: e.createdAt });
+    else openSheet(newExpenseState(g, e)); },
+  'save-exp': () => {
+    const st = sheetState, g = Store.data.groups[st.gid], r = computeExpense(st, g);
+    if (r.error) return;
+    const id = st.id || uid();
+    const split = { type: st.split, parts: st.split === 'equal' ? Object.fromEntries(Object.keys(r.owed).map(k => [k, 1])) : { ...st.parts } };
+    if (st.split === 'itemized') Object.assign(split, { items: st.items.filter(it => toCents(it.price)).map(it => ({ id: it.id, name: it.name, price: toCents(it.price), who: it.who })), tax: st.tax, tip: st.tip, parts: {} });
+    Store.put('expenses', id, { groupId: g.id, kind: 'expense', desc: st.desc.trim(), amount: r.total, paid: r.paid, owed: r.owed, split, category: st.category, date: st.date || today(), notes: st.notes, createdAt: st.createdAt || Date.now() });
+    touchGroup(g.id); closeSheet(); toast(st.id ? 'Expense updated' : 'Expense added');
+  },
+  'del-exp': () => { sheetState.confirm = true; renderSheet(); },
+  'del-exp-yes': () => { const e = Store.data.expenses[sheetState.id]; closeSheet(); if (!e) return; const copy = { ...e }; Store.del('expenses', e.id);
+    toast('Deleted “' + (e.kind === 'payment' ? 'payment' : e.desc) + '”', 'Undo', () => Store.put('expenses', copy.id, copy)); },
+  'add-item': () => { const g = curGroup(); sheetState.items.push({ id: uid(), name: '', price: '', who: g.members.map(m => m.id) }); renderSheet(); setTimeout(() => $(`#it-n-${sheetState.items.at(-1).id}`)?.focus()); },
+  'rm-item': el => { sheetState.items.splice(+el.dataset.i, 1); renderSheet(); },
+  'item-who': el => { const it = sheetState.items[+el.dataset.i], m = el.dataset.m; it.who = it.who.includes(m) ? it.who.filter(x => x !== m) : [...it.who, m]; renderSheet(); },
+  'settle': () => { const g = curGroup(); const xs = simplify(netBalances(g)); const me = meIn(g); const x = (me && xs.find(t => t.from === me.id)) || xs[0];
+    openSheet({ type: 'settle', gid: g.id, kind: 'payment', from: x ? x.from : g.members[0].id, to: x ? x.to : (g.members[1] || g.members[0]).id, amount: x ? fromCents(x.amount) : '', date: today() }); },
+  'record-xfer': el => openSheet({ type: 'settle', gid: S.id, kind: 'payment', from: el.dataset.from, to: el.dataset.to, amount: fromCents(+el.dataset.amt), date: today() }),
+  'save-settle': () => { const st = sheetState, amt = toCents(st.amount); if (!amt || st.from === st.to) return; const id = st.id || uid();
+    Store.put('expenses', id, { groupId: st.gid, kind: 'payment', desc: 'Payment', amount: amt, paid: { [st.from]: amt }, owed: { [st.to]: amt }, category: 'other', date: st.date || today(), createdAt: st.createdAt || Date.now() });
+    touchGroup(st.gid); closeSheet(); toast('Payment recorded'); },
+  'copy-xfers': () => { const g = curGroup(); copyText(`${g.name}: settle up\n` + simplify(netBalances(g)).map(x => `${memberName(g, x.from)} → ${memberName(g, x.to)}: ${money(x.amount, g.currency)}`).join('\n')); },
+  'rm-member': el => { const g = curGroup(); Store.put('groups', g.id, { ...g, members: g.members.filter(m => m.id !== el.dataset.id) }); },
+  'del-group': () => { confirmDel = S.id; render(); },
+  'del-cancel': () => { confirmDel = null; render(); },
+  'del-group-yes': async () => { const gid = S.id; confirmDel = null; go('home'); for (const e of groupExpenses(gid)) await Store.del('expenses', e.id); await Store.del('groups', gid); toast('Group deleted'); },
+  'export-csv': () => exportCSV(curGroup()),
+  'close-sheet': closeSheet,
+  'me': () => openSheet({ type: 'me', name: meName() }),
+  'save-me': () => { LS.set('me', sheetState.name.trim()); closeSheet(); render(); },
+  // poker
+  'new-session': () => openSheet({ type: 'session', title: '', date: today(), location: '', game: 'NL Hold’em cash', stakes: '', defaultBuyIn: '20', currency: sessionsList()[0]?.currency || groupsList()[0]?.currency || 'GBP', hours: '', notes: '', playersTxt: meName() ? meName() + ', ' : '' }),
+  'edit-session': () => { const s = Store.data.poker[S.id]; openSheet({ type: 'session', id: s.id, title: s.title || '', date: s.date, location: s.location || '', game: s.game, stakes: s.stakes || '', defaultBuyIn: fromCents(s.defaultBuyIn || 0), currency: s.currency, hours: s.hours || '', notes: s.notes || '' }); },
+  'save-session': () => { const st = sheetState;
+    const base = st.id ? Store.data.poker[st.id] : { status: 'live', createdAt: Date.now(), players: [] };
+    const id = st.id || uid(), buy = toCents(st.defaultBuyIn);
+    const s = { ...base, id, title: st.title.trim() || 'Poker night', date: st.date || today(), location: st.location.trim(), game: st.game, stakes: st.stakes.trim(), defaultBuyIn: buy, currency: st.currency, hours: parseFloat(st.hours) || 0, notes: st.notes };
+    if (!st.id) { const seen = new Set(); s.players = (st.playersTxt || '').split(',').map(x => x.trim()).filter(x => x && !seen.has(norm(x)) && seen.add(norm(x))).map(name => ({ name, buyIns: buy ? [buy] : [], cashOut: null })); }
+    saveSession(s); closeSheet(); if (!st.id) go('session', id); },
+  'add-buy': el => { const s = structuredClone(Store.data.poker[S.id]); const p = s.players[+el.dataset.p]; if (!s.defaultBuyIn) { toast('Set a default buy-in in Edit details, or type an amount in “other”.'); return; } p.buyIns = [...(p.buyIns || []), s.defaultBuyIn]; saveSession(s, 500); },
+  'rm-buy': el => { const s = structuredClone(Store.data.poker[S.id]); s.players[+el.dataset.p].buyIns.splice(+el.dataset.b, 1); saveSession(s, 500); },
+  'rm-player': el => { const s = structuredClone(Store.data.poker[S.id]); const [p] = s.players.splice(+el.dataset.p, 1); saveSession(s); toast(`Removed ${p.name}`, 'Undo', () => { const t = structuredClone(Store.data.poker[S.id]); t.players.splice(+el.dataset.p, 0, p); saveSession(t); }); },
+  'seat': el => seatPlayer(el.dataset.name),
+  'finish-session': () => { const s = Store.data.poker[S.id]; const missing = (s.players || []).filter(p => p.cashOut == null);
+    if (missing.length) { toast(`Enter a cash-out for ${missing.map(p => p.name).join(', ')} first (0 if they busted).`); return; }
+    saveSession({ ...s, status: 'final' }); toast('Session finished and added to the leaderboard'); },
+  'reopen-session': () => saveSession({ ...Store.data.poker[S.id], status: 'live' }),
+  'copy-results': () => { const s = Store.data.poker[S.id], c = s.currency; const ps = (s.players || []).slice().sort((a, b) => (pNet(b) ?? -1e12) - (pNet(a) ?? -1e12));
+    const nets = {}; s.players.forEach((p, i) => { if (pNet(p) != null) nets[i] = pNet(p); });
+    let t = `${s.title} · ${fdate(s.date)}\n` + ps.map(p => `${p.name}: ${pNet(p) == null ? 'still playing' : money(pNet(p), c, true)} (in ${money(pIn(p), c)})`).join('\n');
+    const xs = simplify(nets); if (xs.length) t += '\n\nPayments:\n' + xs.map(x => `${s.players[x.from].name} → ${s.players[x.to].name}: ${money(x.amount, c)}`).join('\n');
+    copyText(t); },
+  'del-session': () => { confirmDel = S.id; render(); },
+  'del-session-yes': () => { const id = S.id; confirmDel = null; go('poker'); Store.del('poker', id); toast('Session deleted'); },
+  'load-sample': loadSample,
+  'clear-sample': async () => { for (const e of Object.values(Store.data.expenses).filter(e => e.sample)) await Store.del('expenses', e.id);
+    for (const g of Object.values(Store.data.groups).filter(g => g.sample)) await Store.del('groups', g.id);
+    for (const s of Object.values(Store.data.poker).filter(s => s.sample)) await Store.del('poker', s.id); toast('Sample data removed'); }
+};
+function addNames(txt) { const st = sheetState; for (const n of String(txt).split(',').map(s => s.trim()).filter(Boolean)) if (!st.members.some(m => norm(m) === norm(n))) st.members.push(n); renderSheet(); }
+function seatPlayer(name) {
+  name = String(name || '').trim(); if (!name) return;
+  const s = structuredClone(Store.data.poker[S.id]);
+  if (s.players.some(p => norm(p.name) === norm(name))) { toast(`${name} is already seated.`); return; }
+  s.players.push({ name, buyIns: s.defaultBuyIn ? [s.defaultBuyIn] : [], cashOut: null }); saveSession(s);
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-go],[data-act],[data-tab],[data-ptab],[data-split],[data-cat],[data-sort]');
+  if (!t || t.disabled) return;
+  if (t.dataset.go) { e.preventDefault(); if (sheetState && t.closest('#sheet')) closeSheet(); if (t.dataset.go === 'groups') { openSheet({ type: 'groups' }); return; } confirmDel = null; go(t.dataset.go, t.dataset.id || null); return; }
+  if (t.dataset.tab) { S.tab = t.dataset.tab; confirmDel = null; LS.set('ui', { ...LS.get('ui', {}), tab: S.tab }); render(); return; }
+  if (t.dataset.ptab) { S.ptab = t.dataset.ptab; LS.set('ui', { ...LS.get('ui', {}), ptab: S.ptab }); render(); return; }
+  if (t.dataset.split) { const st = sheetState, g = curGroup(); st.split = t.dataset.split;
+    if (st.split === 'equal') st.parts = Object.fromEntries(g.members.map(m => [m.id, 1]));
+    else if (st.split === 'shares') st.parts = Object.fromEntries(g.members.map(m => [m.id, '1']));
+    else if (st.split === 'percent') { const n = g.members.length; st.parts = Object.fromEntries(g.members.map(m => [m.id, +(100 / n).toFixed(2) + ''])); }
+    else if (st.split === 'exact') { const a = allocate(toCents(st.amount), Object.fromEntries(g.members.map(m => [m.id, 1]))); st.parts = Object.fromEntries(g.members.map(m => [m.id, fromCents(a[m.id] || 0)])); }
+    renderSheet(); return; }
+  if (t.dataset.cat) { sheetState.category = t.dataset.cat; renderSheet(); return; }
+  if (t.dataset.sort) { const k = t.dataset.sort; if (S.sort === k) S.sortDir *= -1; else { S.sort = k; S.sortDir = k === 'name' ? 1 : -1; } render(); return; }
+  const fn = actions[t.dataset.act]; if (fn) { e.preventDefault(); fn(t); }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 'me-input') { LS.set('me', t.value.trim()); clearTimeout(window._meT); window._meT = setTimeout(render, 350); return; }
+  if (t.id === 'q') { S.q = t.value; render(); return; }
+  if (!sheetState || !t.closest('#sheet')) return;
+  const st = sheetState;
+  if (t.dataset.f) { st[t.dataset.f] = t.value; if (st.type === 'settle') st.touched = true; }
+  else if (t.dataset.part) st.parts[t.dataset.part] = t.value;
+  else if (t.dataset.paidm) st.paidMulti[t.dataset.paidm] = t.value;
+  else if (t.dataset.item) st.items[+t.dataset.item][t.dataset.k] = t.value;
+  else if (t.dataset.eq) st.parts[t.dataset.eq] = t.checked ? 1 : 0;
+  else return;
+  if (t.tagName === 'SELECT' || t.type === 'checkbox' || t.type === 'date') renderSheet(); else { clearTimeout(window._sT); window._sT = setTimeout(renderSheet, 160); }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'catf') { S.cat = t.value; render(); return; }
+  if (t.dataset.cashout != null) { const s = structuredClone(Store.data.poker[S.id]); const v = t.value.trim(); s.players[+t.dataset.cashout].cashOut = v === '' ? null : toCents(v); saveSession(s); return; }
+  if (t.dataset.custombuy != null) { const v = toCents(t.value); if (v > 0) { const s = structuredClone(Store.data.poker[S.id]); s.players[+t.dataset.custombuy].buyIns.push(v); t.value = ''; saveSession(s, 300); } return; }
+  if (t.dataset.rename) { const g = curGroup(); const name = t.value.trim(); if (!name) { render(); return; } Store.put('groups', g.id, { ...g, members: g.members.map(m => m.id === t.dataset.rename ? { ...m, name } : m) }); return; }
+  if (t.dataset.gfield) { const g = curGroup(); const v = t.value.trim(); if (!v) { render(); return; } Store.put('groups', g.id, { ...g, [t.dataset.gfield]: v }); return; }
+});
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target.dataset.form;
+  if (f === 'add-member') { const inp = $('#new-member'); const n = inp.value.trim(); const g = curGroup(); if (!n) return; if (g.members.some(m => norm(m.name) === norm(n))) { toast(`${n} is already in the group.`); return; }
+    Store.put('groups', g.id, { ...g, members: [...g.members, { id: uid(), name: n }] }); setTimeout(() => $('#new-member')?.focus(), 50); }
+  else if (f === 'add-player') { const inp = $('#new-player'); seatPlayer(inp.value); setTimeout(() => { const n = $('#new-player'); if (n) { n.value = ''; n.focus(); } }, 50); }
+  else if (f === 'sheet') {
+    if (document.activeElement?.id === 'ng-add') { actions['ng-add'](); return; }
+    const st = sheetState; if (!st) return;
+    const btn = $('#sheet footer .btn.primary, #sheet footer .btn.brass'); if (btn && !btn.disabled) btn.click();
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && sheetState) closeSheet();
+  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.custombuy != null) { e.preventDefault(); e.target.blur(); }
+  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.cashout != null) { e.preventDefault(); const i = +e.target.dataset.cashout; const nx = $(`#co-${i + 1}`); e.target.blur(); if (nx) nx.focus(); }
+});
+$('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') closeSheet(); });
+// hover tooltips for [data-tip="title|value"]
+document.addEventListener('pointerover', e => { const t = e.target.closest('[data-tip]'); if (!t) return; const [a, b] = t.dataset.tip.split('|'); $('#tip').innerHTML = `<div class="t">${esc(a)}</div><div>${esc(b || '')}</div>`; });
+document.addEventListener('pointermove', e => { const t = e.target.closest('[data-tip]'); if (t) showTip(e.clientX, e.clientY); else if (!e.target.closest('#pchart')) $('#tip').hidden = true; });
+function showTip(x, y) { const tip = $('#tip'); tip.hidden = false; const w = tip.offsetWidth, h = tip.offsetHeight; tip.style.left = Math.min(window.innerWidth - w - 8, x + 14) + 'px'; tip.style.top = Math.max(8, y - h - 12) + 'px'; }
+let rT; window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(() => { if (S.route === 'poker' && S.ptab === 'trends') drawPokerChart(); }, 150); });
+
+/* ---------- toast, clipboard, export ---------- */
+let toastT;
+function toast(msg, label, fn) {
+  const t = $('#toast'); t.hidden = false;
+  t.innerHTML = `<span>${esc(msg)}</span>${label ? `<button>${esc(label)}</button>` : ''}`;
+  if (label) t.querySelector('button').onclick = () => { t.hidden = true; fn(); };
+  clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, label ? 6000 : 3200);
+}
+async function copyText(txt) {
+  try { await navigator.clipboard.writeText(txt); toast('Copied. Paste it into your group chat.'); }
+  catch { openSheet({ type: 'me', name: meName() }); const b = $('#sheet .body'); b.innerHTML = `<p class="mut" style="margin:0">Copying is blocked here. Select the text below and copy it.</p><textarea class="input" id="copybox" rows="12">${esc(txt)}</textarea>`; $('#sheet header h2').textContent = 'Copy'; $('#copybox').select(); sheetState = null; }
+}
+async function exportCSV(g) {
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const head = ['Date', 'Description', 'Category', 'Type', 'Amount', 'Currency', ...g.members.map(m => m.name + ' paid'), ...g.members.map(m => m.name + ' share'), 'Notes'];
+  const rows = groupExpenses(g.id).slice().reverse().map(e => [e.date, e.kind === 'payment' ? `${memberName(g, Object.keys(e.paid)[0])} paid ${memberName(g, Object.keys(e.owed)[0])}` : e.desc, e.kind === 'payment' ? '' : (CATS[e.category] || CATS.other)[0], e.kind || 'expense', fromCents(e.amount), g.currency,
+    ...g.members.map(m => fromCents(e.paid[m.id] || 0)), ...g.members.map(m => fromCents(e.owed[m.id] || 0)), e.notes || '']);
+  const csv = [head, ...rows].map(r => r.map(q).join(',')).join('\n');
+  let dl = null; try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch {}
+  if (dl) { try { await dl.save({ filename: g.name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') + '-expenses.csv', data: csv }); toast('CSV saved'); return; } catch (err) { if (err && err.code === 'declined') return; } }
+  copyText(csv);
+}
+
+/* ---------- sample data (clearly marked, removable) ---------- */
+async function loadSample() {
+  toast('Loading sample data…');
+  const mk = names => names.map(n => ({ id: uid(), name: n }));
+  const y = new Date().getFullYear(), mo = new Date().getMonth();
+  const d = (back, day) => { const t = new Date(y, mo - back, day); return t.toISOString().slice(0, 10); };
+  const tripM = mk(['Ana', 'Ben', 'Chloe', 'Dev']); const [A, B, C, D] = tripM.map(m => m.id);
+  const trip = { id: uid(), name: 'Lisbon trip', currency: 'EUR', members: tripM, sample: true, createdAt: Date.now() - 5e8, updatedAt: Date.now() };
+  const flatM = mk(['Ana', 'Marcus', 'Priya']); const [FA, FM, FP] = flatM.map(m => m.id);
+  const flat = { id: uid(), name: 'Flat 4B', currency: 'GBP', members: flatM, sample: true, createdAt: Date.now() - 9e8, updatedAt: Date.now() - 1000 };
+  const eq = (amt, ids) => allocate(amt, Object.fromEntries(ids.map(k => [k, 1])));
+  const ex = [];
+  const add = (g, desc, amt, payer, ids, cat, date, extra = {}) => ex.push({ id: uid(), groupId: g.id, kind: 'expense', desc, amount: amt, paid: { [payer]: amt }, owed: eq(amt, ids), split: { type: 'equal', parts: Object.fromEntries(ids.map(k => [k, 1])) }, category: cat, date, notes: '', createdAt: Date.now() - ex.length * 1000, sample: true, ...extra });
+  add(trip, 'Apartment in Alfama', 64000, A, [A, B, C, D], 'travel', d(1, 3));
+  add(trip, 'Pastéis de Belém run', 1840, C, [A, B, C, D], 'food', d(1, 4));
+  add(trip, 'Tram 28 day passes', 2560, B, [A, B, C, D], 'transport', d(1, 4));
+  add(trip, 'Bairro Alto bar tab', 7350, D, [B, C, D], 'drinks', d(1, 5));
+  add(trip, 'Sintra tour', 18000, A, [A, B, C, D], 'fun', d(1, 6));
+  add(trip, 'Seafood dinner, Cervejaria Ramiro', 21460, B, [A, B, C, D], 'food', d(1, 6));
+  add(trip, 'Groceries for the flat', 4210, C, [A, B, C, D], 'groceries', d(1, 4));
+  const it = { id: uid(), groupId: trip.id, kind: 'expense', desc: 'Last-night tasca', amount: 9900, paid: { [D]: 9900 }, owed: {}, category: 'food', date: d(1, 7), notes: 'Ben skipped the wine', createdAt: Date.now() - 50, sample: true,
+    split: { type: 'itemized', parts: {}, tax: '0', tip: '10', items: [{ id: uid(), name: 'Sharing platters', price: 4800, who: [A, B, C, D] }, { id: uid(), name: 'Wine (2 bottles)', price: 3200, who: [A, C, D] }, { id: uid(), name: 'Desserts', price: 1000, who: [B, C] }] } };
+  { const base = {}; for (const i of it.split.items) { const a = allocate(i.price, Object.fromEntries(i.who.map(k => [k, 1]))); for (const k in a) base[k] = (base[k] || 0) + a[k]; } const exA = allocate(900, base); for (const k in base) it.owed[k] = base[k] + (exA[k] || 0); }
+  ex.push(it);
+  ex.push({ id: uid(), groupId: trip.id, kind: 'payment', desc: 'Payment', amount: 10000, paid: { [C]: 10000 }, owed: { [A]: 10000 }, category: 'other', date: d(0, 2), createdAt: Date.now(), sample: true });
+  for (let b = 3; b >= 0; b--) {
+    add(flat, 'Rent', 195000, FA, [FA, FM, FP], 'rent', d(b, 1));
+    add(flat, 'Energy bill', 9000 + b * 700, FM, [FA, FM, FP], 'bills', d(b, 12));
+    add(flat, 'Big shop', 6800 + b * 450, FP, [FA, FM, FP], 'groceries', d(b, 9));
+  }
+  add(flat, 'Broadband', 3500, FP, [FA, FM, FP], 'bills', d(0, 5));
+  add(flat, 'Pizza night', 4290, FM, [FA, FM, FP], 'food', d(0, 7));
+  ex.push({ id: uid(), groupId: flat.id, kind: 'payment', desc: 'Payment', amount: 120000, paid: { [FM]: 120000 }, owed: { [FA]: 120000 }, category: 'other', date: d(1, 2), createdAt: Date.now() - 4000, sample: true });
+  ex.push({ id: uid(), groupId: flat.id, kind: 'payment', desc: 'Payment', amount: 120000, paid: { [FP]: 120000 }, owed: { [FA]: 120000 }, category: 'other', date: d(1, 2), createdAt: Date.now() - 4001, sample: true });
+
+  // poker: six finished nights with balanced banks
+  const nights = [
+    [4, 8, 'Friday home game', "Ben's flat", 4, { Ana: [[2000], 4650], Ben: [[2000, 2000], 1500], Dev: [[2000], 2850], Marcus: [[2000, 2000], 0], Priya: [[2000], 3000] }],
+    [3, 13, 'Friday home game', "Priya's place", 3.5, { Ana: [[2000, 2000], 2200], Ben: [[2000], 4480], Dev: [[2000], 1020], Priya: [[2000], 2300] }],
+    [2, 10, 'Birthday deep-stack', "Marcus's", 5, { Ana: [[4000], 9900], Ben: [[4000], 1100], Dev: [[4000, 4000], 3000], Marcus: [[4000], 6500], Priya: [[4000], 3500] }],
+    [1, 7, 'Friday home game', "Ben's flat", 4, { Ana: [[2000], 0], Ben: [[2000], 3600], Dev: [[2000], 4400], Marcus: [[2000, 2000], 1500], Tom: [[2000], 2500] }],
+    [1, 21, 'PLO experiment', "Dev's", 3, { Ana: [[2000], 2750], Ben: [[2000, 2000], 0], Dev: [[2000], 4520], Priya: [[2000], 2730] }],
+    [0, 4, 'Friday home game', "Priya's place", 4.5, { Ana: [[2000], 3800], Ben: [[2000], 2600], Dev: [[2000, 2000], 1200], Marcus: [[2000], 2200], Priya: [[2000], 1800], Tom: [[2000], 400] }]
+  ];
+  const sessions = nights.map(([b, day, title, loc, hours, pl], i) => ({ id: uid(), title, location: loc, date: d(b, day), game: title.startsWith('PLO') ? 'PLO cash' : 'NL Hold’em cash', stakes: title.startsWith('Birthday') ? '0.25/0.50' : '0.10/0.20',
+    defaultBuyIn: title.startsWith('Birthday') ? 4000 : 2000, currency: 'GBP', hours, status: 'final', notes: '', createdAt: Date.now() - (10 - i) * 1e6, sample: true,
+    players: Object.entries(pl).map(([name, [buys, out]]) => ({ name, buyIns: buys, cashOut: out })) }));
+  // keep each sample bank balanced
+  for (const s of sessions) { const tin = s.players.reduce((a, p) => a + pIn(p), 0), tout = s.players.reduce((a, p) => a + p.cashOut, 0); s.players[0].cashOut += tin - tout; }
+
+  await Store.put('groups', trip.id, trip); await Store.put('groups', flat.id, flat);
+  for (const e of ex) await Store.put('expenses', e.id, e);
+  for (const s of sessions) await Store.put('poker', s.id, s);
+  toast('Sample data loaded. Remove it any time from Overview.');
+}
+
+/* ---------- boot ---------- */
+render();
+Store.init();
+</script>

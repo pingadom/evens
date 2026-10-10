@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Evens</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -166,6 +167,15 @@ button.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .xfer .names{display:flex;gap:6px;align-items:center;flex-wrap:wrap;min-width:0}
 .xfer .names svg{width:16px;height:16px;color:var(--muted)}
 .settled{display:flex;gap:10px;align-items:center;color:var(--pos);font-weight:600;padding:8px 0}
+.paybox{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;padding:6px 8px;border-radius:10px;background:var(--surface-2);font-size:13px;min-width:0}
+.paybox.none{background:transparent;padding:0}
+.paybox .lbl{font-size:12px;color:var(--muted);margin-right:2px}
+.payf{all:unset;cursor:pointer;display:inline-flex;flex-direction:column;line-height:1.2;padding:4px 8px;border-radius:8px;min-width:0}
+.payf:hover{background:var(--surface)}
+.payf:focus-visible{outline:2px solid var(--accent)}
+.payf small{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+.payf b{font:500 13.5px var(--f-mono);overflow-wrap:anywhere}
+.paybox .end{margin-left:auto;display:flex;gap:4px}
 
 /* bars (html) */
 .hbars{display:flex;flex-direction:column;gap:10px}
@@ -349,10 +359,10 @@ const I = {
 };
 
 /* ---------- store: shared db when available, browser storage otherwise ---------- */
-const COLLS = ['groups', 'expenses', 'poker'];
+const COLLS = ['groups', 'expenses', 'poker', 'payees'];
 const Store = {
   db: null, mode: 'connecting', canWrite: true, loaded: {},
-  data: { groups: {}, expenses: {}, poker: {} },
+  data: { groups: {}, expenses: {}, poker: {}, payees: {} },
   chains: {}, timers: {},
   async init() {
     let db = null;
@@ -451,6 +461,30 @@ const groupsList = () => Object.values(Store.data.groups).sort((a, b) => (b.upda
 const memberName = (g, id) => (g.members.find(m => m.id === id) || {}).name || 'Former member';
 const meName = () => LS.get('me', '');
 const meIn = g => { const n = norm(meName()); return n ? g.members.find(m => norm(m.name) === n) : null; };
+
+/* ---------- bank details (one record per person name, shared across groups and poker) ---------- */
+function payeeKey(name) {
+  const n = norm(name); let h = 0; for (const ch of n) h = (h * 33 + ch.codePointAt(0)) >>> 0;
+  return 'p-' + (n.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'x') + '-' + h.toString(36);
+}
+const payeeOf = name => Store.data.payees[payeeKey(name)];
+const fmtSort = s => { const d = String(s || '').replace(/\D/g, ''); return d.length === 6 ? d.replace(/(\d{2})(\d{2})(\d{2})/, '$1-$2-$3') : d; };
+function payText(name, amount, cur, ref) {
+  const p = payeeOf(name); if (!p) return '';
+  return [amount != null ? `Pay ${p.holder || name} ${money(amount, cur)}` : `${name}'s bank details`,
+    `Name: ${p.holder || name}`, p.sortCode && `Sort code: ${fmtSort(p.sortCode)}`, p.account && `Account number: ${p.account}`,
+    p.other && `Other: ${p.other}`, ref && `Reference: ${ref}`].filter(Boolean).join('\n');
+}
+// Inline block under a transfer: tap any field to copy it, or copy everything at once.
+function payBox(name, amount, cur, ref) {
+  const p = payeeOf(name);
+  if (!p) return Store.canWrite ? `<div class="paybox none"><button type="button" class="btn ghost sm" data-act="edit-payee" data-name="${esc(name)}">${I.plus}Add ${esc(name)}'s bank details</button></div>` : '';
+  const f = (label, v, shown) => v ? `<button type="button" class="payf" data-act="copy-field" data-v="${esc(v)}" data-l="${esc(label)}" title="Copy ${esc(label.toLowerCase())}"><small>${esc(label)}</small><b>${esc(shown || v)}</b></button>` : '';
+  return `<div class="paybox"><span class="lbl">Pay to</span>
+    ${f('Name', p.holder || name)}${f('Sort code', String(p.sortCode || '').replace(/\D/g, ''), fmtSort(p.sortCode))}${f('Account', p.account)}${f('Other', p.other)}${amount != null ? f('Amount', fromCents(amount), money(amount, cur)) : ''}${ref ? f('Reference', ref.slice(0, 18)) : ''}
+    <span class="end"><button type="button" class="btn sm" data-act="copy-pay" data-name="${esc(name)}" data-amt="${amount ?? ''}" data-cur="${esc(cur || '')}" data-ref="${esc(ref || '')}">Copy all</button>
+    ${Store.canWrite ? `<button type="button" class="btn ghost sm" data-act="edit-payee" data-name="${esc(name)}">Edit</button>` : ''}</span></div>`;
+}
 
 /* ---------- poker maths ---------- */
 const pIn = p => (p.buyIns || []).reduce((s, v) => s + v, 0);
@@ -693,7 +727,8 @@ function groupBalancesTab(g) {
       ${xs.length ? xs.map(x => `<div class="xfer">
         <span class="names">${av(memberName(g, x.from))}<b>${esc(memberName(g, x.from))}</b>${I.arrow}<b>${esc(memberName(g, x.to))}</b></span>
         <span class="amt">${money(x.amount, g.currency)}</span>
-        <button class="btn sm" data-act="record-xfer" data-from="${x.from}" data-to="${x.to}" data-amt="${x.amount}" ${Store.canWrite ? '' : 'disabled'}>Record</button></div>`).join('')
+        <button class="btn sm" data-act="record-xfer" data-from="${x.from}" data-to="${x.to}" data-amt="${x.amount}" ${Store.canWrite ? '' : 'disabled'}>Record</button>
+        ${payBox(memberName(g, x.to), x.amount, g.currency, g.name)}</div>`).join('')
         : `<div class="settled">${I.check}Everyone is square.</div>`}
       ${xs.length ? `<p class="mut" style="font-size:13px;margin:12px 0 0">Debts are netted across the group, so nobody pays someone who would only pay it on. <button class="btn ghost sm" data-act="copy-xfers">Copy as text</button></p>` : ''}
     </section></div>`;
@@ -739,8 +774,9 @@ function groupSettingsTab(g) {
   const used = new Set(); groupExpenses(g.id).forEach(e => { Object.keys(e.paid || {}).forEach(k => used.add(k)); Object.keys(e.owed || {}).forEach(k => used.add(k)); });
   return `<div class="cols">
     <section class="card"><div class="cardhead"><h2>Members</h2></div>
-      <div class="list">${g.members.map(m => `<div class="balrow" style="grid-template-columns:auto minmax(0,1fr) auto">
+      <div class="list">${g.members.map(m => `<div class="balrow" style="grid-template-columns:auto minmax(0,1fr) auto auto">
         ${av(m.name)}<input class="input" id="mn-${m.id}" data-rename="${m.id}" value="${esc(m.name)}" aria-label="Name" ${Store.canWrite ? '' : 'disabled'}>
+        <button class="btn sm ${payeeOf(m.name) ? '' : 'ghost'}" data-act="edit-payee" data-name="${esc(m.name)}" ${Store.canWrite ? '' : 'disabled'}>${payeeOf(m.name) ? I.check + 'Bank' : '+ Bank'}</button>
         <button class="btn sm ghost" data-act="rm-member" data-id="${m.id}" ${used.has(m.id) || !Store.canWrite ? 'disabled title="Members with expenses can\'t be removed"' : ''}>Remove</button></div>`).join('')}</div>
       <form class="row" data-form="add-member" style="margin-top:12px"><input class="input" id="new-member" placeholder="Add someone by name" ${Store.canWrite ? '' : 'disabled'}><button class="btn" style="flex:0 0 auto" ${Store.canWrite ? '' : 'disabled'}>Add</button></form>
     </section>
@@ -923,7 +959,7 @@ function viewSession(s) {
         : `<b>The bank is ${diff > 0 ? 'over' : 'short'} by ${money(Math.abs(diff), c)}.</b><span>${diff > 0 ? 'More was cashed out than bought in. Check for a missed rebuy or a miscounted stack.' : 'Less was cashed out than bought in. Check stacks, or for chips still on the table.'}</span>`}
     </div>` : ''}
     ${xs.length ? `<section class="card"><div class="cardhead"><h2>Who pays whom</h2><span class="eyebrow">${xs.length} payment${xs.length === 1 ? '' : 's'}</span></div>
-      ${xs.map(x => `<div class="xfer" style="grid-template-columns:minmax(0,1fr) auto"><span class="names">${av(ps[x.from].name)}<b>${esc(ps[x.from].name)}</b>${I.arrow}<b>${esc(ps[x.to].name)}</b></span><span class="amt">${money(x.amount, c)}</span></div>`).join('')}
+      ${xs.map(x => `<div class="xfer" style="grid-template-columns:minmax(0,1fr) auto"><span class="names">${av(ps[x.from].name)}<b>${esc(ps[x.from].name)}</b>${I.arrow}<b>${esc(ps[x.to].name)}</b></span><span class="amt">${money(x.amount, c)}</span>${payBox(ps[x.to].name, x.amount, c, s.title || 'Poker')}</div>`).join('')}
       <p class="mut" style="font-size:13px;margin:10px 0 0">For games where buy-ins went on credit. If cash went into a bank, the banker pays out cash-outs instead.</p></section>` : ''}
     ${s.notes ? `<section class="card"><div class="eyebrow">Notes</div><p style="margin:6px 0 0;white-space:pre-wrap">${esc(s.notes)}</p></section>` : ''}
     <div>${confirmDel === s.id ? `<div class="confirm"><b>Delete this session?</b><span style="font-size:14px">Its results leave the leaderboard for everyone.</span><div class="actions"><button class="btn danger" data-act="del-session-yes">Delete session</button><button class="btn" data-act="del-cancel">Keep it</button></div></div>`
@@ -943,6 +979,7 @@ function renderSheet(first) {
   else if (st.type === 'session') ({ title, body, foot } = sessionSheet(st));
   else if (st.type === 'me') ({ title, body, foot } = meSheet(st));
   else if (st.type === 'groups') ({ title, body, foot } = groupsSheet());
+  else if (st.type === 'payee') ({ title, body, foot } = payeeSheet(st));
   const w = $('#sheet');
   const scroll = w.querySelector('.body')?.scrollTop || 0;
   keepFocus(w, () => {
@@ -1051,6 +1088,7 @@ function settleSheet(st) {
     <div class="row"><label class="f">Who paid<select class="input" id="s-from" data-f="from">${opts(st.from)}</select></label><label class="f">Who received<select class="input" id="s-to" data-f="to">${opts(st.to)}</select></label></div>
     <div class="bigamt"><span>${esc(sym(g.currency))}</span><input id="s-amt" data-f="amount" inputmode="decimal" placeholder="0.00" value="${esc(st.amount)}" aria-label="Amount" autofocus></div>
     <label class="f">Date<input class="input" type="date" id="s-date" data-f="date" value="${esc(st.date)}"></label>
+    ${st.from !== st.to ? payBox(memberName(g, st.to), toCents(st.amount) || null, g.currency, g.name) : ''}
     <div class="hint">${esc(memberName(g, st.from))} ${net[st.from] < 0 ? `owes ${money(-net[st.from], g.currency)} overall` : net[st.from] > 0 ? `is owed ${money(net[st.from], g.currency)} overall` : 'is settled up'}. ${esc(memberName(g, st.to))} ${net[st.to] < 0 ? `owes ${money(-net[st.to], g.currency)}` : net[st.to] > 0 ? `is owed ${money(net[st.to], g.currency)}` : 'is settled up'}.</div>
     ${bad && st.touched ? `<div class="hint bad">${bad}</div>` : ''}`;
   const foot = `${st.id ? (st.confirm ? `<button type="button" class="btn danger" data-act="del-exp-yes">Confirm delete</button>` : `<button type="button" class="btn danger" data-act="del-exp">Delete</button>`) : ''}
@@ -1083,8 +1121,29 @@ function sessionSheet(st) {
 function meSheet(st) {
   return { title: 'You', body: `<label class="f">Your name<input class="input" id="me-sheet" data-f="name" value="${esc(st.name)}" placeholder="Match how you appear in groups" autofocus></label>
     <p class="mut" style="margin:0">Evens matches this to member and player names, so it can show your own balances and poker results. It's remembered on this device only.</p>
-    <div class="syncpill"><span class="dot ${Store.mode === 'shared' ? 'on' : ''}"></span>${Store.mode === 'shared' ? 'Data syncs with everyone you share this page with.' : 'Data is saved in this browser only.'}</div>`,
+    <div class="syncpill"><span class="dot ${Store.mode === 'shared' ? 'on' : ''}"></span>${Store.mode === 'shared' ? 'Data syncs with everyone you share this page with.' : 'Data is saved in this browser only.'}</div>
+    ${st.name.trim() ? `<div class="f"><span>Your bank details</span>${payeeOf(st.name) ? payBox(st.name.trim()) : `<button type="button" class="btn" data-act="edit-payee" data-name="${esc(st.name.trim())}" style="align-self:flex-start" ${Store.canWrite ? '' : 'disabled'}>${I.plus}Add your bank details</button>`}
+      <span class="mut" style="font-weight:400">Friends who owe you see these next to what they owe, with one-tap copy.</span></div>` : ''}`,
     foot: `<div class="end"><button type="button" class="btn primary" data-act="save-me">Done</button></div>` };
+}
+function payeeSheet(st) {
+  const sc = st.sortCode.replace(/\D/g, ''), ac = st.account.replace(/\D/g, '');
+  const errs = [];
+  if (sc && sc.length !== 6) errs.push('A sort code has 6 digits, e.g. 12-34-56.');
+  if (ac && ac.length !== 8) errs.push(ac.length === 7 ? 'UK account numbers have 8 digits. For a 7-digit number, add a 0 at the start.' : 'A UK account number has 8 digits.');
+  if (!sc && !ac && !st.other.trim()) errs.push('Add a sort code and account number, or another way to pay.');
+  const body = `
+    <label class="f">Name on the account<input class="input" id="py-holder" data-f="holder" placeholder="${esc(st.name)}" value="${esc(st.holder)}" autocomplete="off" autofocus></label>
+    <div class="row">
+      <label class="f">Sort code<input class="input mono" id="py-sort" data-f="sortCode" inputmode="numeric" placeholder="12-34-56" maxlength="8" value="${esc(st.sortCode)}" autocomplete="off"></label>
+      <label class="f">Account number<input class="input mono" id="py-acc" data-f="account" inputmode="numeric" placeholder="12345678" maxlength="8" value="${esc(st.account)}" autocomplete="off"></label>
+    </div>
+    <label class="f">Other ways to pay<input class="input" id="py-other" data-f="other" placeholder="e.g. monzo.me/ana, Revolut @ana, PayPal, IBAN" value="${esc(st.other)}" autocomplete="off"><span class="mut" style="font-weight:400">Optional. Useful for friends abroad or payment apps.</span></label>
+    ${st.touched && errs.length ? `<div class="hint bad">${errs.map(esc).join('<br>')}</div>` : ''}
+    <div class="hint">${Store.mode === 'shared' ? 'Everyone who can open this ledger can see these details. Only add details you are happy to share with these groups. Never add card numbers, PINs or passwords.' : 'Saved in this browser only. Never add card numbers, PINs or passwords.'} These details apply to “${esc(st.name)}” in every group and on poker nights.</div>`;
+  const foot = `${payeeOf(st.name) ? `<button type="button" class="btn danger" data-act="del-payee">Remove details</button>` : ''}
+    <div class="end"><button type="button" class="btn" data-act="close-sheet">Cancel</button><button type="button" class="btn primary" data-act="save-payee" ${errs.length || !Store.canWrite ? 'disabled' : ''}>Save details</button></div>`;
+  return { title: `${st.name}'s bank details`, body, foot };
 }
 function groupsSheet() {
   const gs = groupsList();
@@ -1131,13 +1190,25 @@ const actions = {
   'save-settle': () => { const st = sheetState, amt = toCents(st.amount); if (!amt || st.from === st.to) return; const id = st.id || uid();
     Store.put('expenses', id, { groupId: st.gid, kind: 'payment', desc: 'Payment', amount: amt, paid: { [st.from]: amt }, owed: { [st.to]: amt }, category: 'other', date: st.date || today(), createdAt: st.createdAt || Date.now() });
     touchGroup(st.gid); closeSheet(); toast('Payment recorded'); },
-  'copy-xfers': () => { const g = curGroup(); copyText(`${g.name}: settle up\n` + simplify(netBalances(g)).map(x => `${memberName(g, x.from)} → ${memberName(g, x.to)}: ${money(x.amount, g.currency)}`).join('\n')); },
+  'copy-xfers': () => { const g = curGroup(); const xs = simplify(netBalances(g));
+    const lines = xs.map(x => `${memberName(g, x.from)} → ${memberName(g, x.to)}: ${money(x.amount, g.currency)}`);
+    const bank = [...new Set(xs.map(x => memberName(g, x.to)))].filter(payeeOf).map(n => payText(n, null, g.currency, g.name));
+    copyText(`${g.name}: settle up\n${lines.join('\n')}${bank.length ? '\n\n' + bank.join('\n\n') : ''}`); },
   'rm-member': el => { const g = curGroup(); Store.put('groups', g.id, { ...g, members: g.members.filter(m => m.id !== el.dataset.id) }); },
   'del-group': () => { confirmDel = S.id; render(); },
   'del-cancel': () => { confirmDel = null; render(); },
   'del-group-yes': async () => { const gid = S.id; confirmDel = null; go('home'); for (const e of groupExpenses(gid)) await Store.del('expenses', e.id); await Store.del('groups', gid); toast('Group deleted'); },
   'export-csv': () => exportCSV(curGroup()),
-  'close-sheet': closeSheet,
+  'close-sheet': () => { const back = sheetState?.back; closeSheet(); if (back) openSheet(back); },
+  'edit-payee': el => { const name = el.dataset.name, p = payeeOf(name) || {};
+    openSheet({ type: 'payee', name, holder: p.holder || '', sortCode: fmtSort(p.sortCode), account: p.account || '', other: p.other || '', back: sheetState && sheetState.type !== 'payee' ? sheetState : null }); },
+  'save-payee': () => { const st = sheetState, key = payeeKey(st.name);
+    Store.put('payees', key, { name: st.name, holder: st.holder.trim(), sortCode: st.sortCode.replace(/\D/g, ''), account: st.account.replace(/\D/g, ''), other: st.other.trim(), updatedAt: Date.now() });
+    toast(`Saved ${st.name}'s bank details`); actions['close-sheet'](); },
+  'del-payee': () => { const st = sheetState, p = payeeOf(st.name); if (!p) return; const copy = { ...p };
+    Store.del('payees', p.id); actions['close-sheet'](); toast(`Removed ${st.name}'s bank details`, 'Undo', () => Store.put('payees', copy.id, copy)); },
+  'copy-field': el => copyText(el.dataset.v, `${el.dataset.l} copied`),
+  'copy-pay': el => copyText(payText(el.dataset.name, el.dataset.amt === '' ? null : +el.dataset.amt, el.dataset.cur || 'GBP', el.dataset.ref), 'Payment details copied'),
   'me': () => openSheet({ type: 'me', name: meName() }),
   'save-me': () => { LS.set('me', sheetState.name.trim()); closeSheet(); render(); },
   // poker
@@ -1161,13 +1232,16 @@ const actions = {
     const nets = {}; s.players.forEach((p, i) => { if (pNet(p) != null) nets[i] = pNet(p); });
     let t = `${s.title} · ${fdate(s.date)}\n` + ps.map(p => `${p.name}: ${pNet(p) == null ? 'still playing' : money(pNet(p), c, true)} (in ${money(pIn(p), c)})`).join('\n');
     const xs = simplify(nets); if (xs.length) t += '\n\nPayments:\n' + xs.map(x => `${s.players[x.from].name} → ${s.players[x.to].name}: ${money(x.amount, c)}`).join('\n');
+    const bank = [...new Set(xs.map(x => s.players[x.to].name))].filter(payeeOf).map(n => payText(n, null, c, s.title));
+    if (bank.length) t += '\n\n' + bank.join('\n\n');
     copyText(t); },
   'del-session': () => { confirmDel = S.id; render(); },
   'del-session-yes': () => { const id = S.id; confirmDel = null; go('poker'); Store.del('poker', id); toast('Session deleted'); },
   'load-sample': loadSample,
   'clear-sample': async () => { for (const e of Object.values(Store.data.expenses).filter(e => e.sample)) await Store.del('expenses', e.id);
     for (const g of Object.values(Store.data.groups).filter(g => g.sample)) await Store.del('groups', g.id);
-    for (const s of Object.values(Store.data.poker).filter(s => s.sample)) await Store.del('poker', s.id); toast('Sample data removed'); }
+    for (const s of Object.values(Store.data.poker).filter(s => s.sample)) await Store.del('poker', s.id);
+    for (const p of Object.values(Store.data.payees).filter(p => p.sample)) await Store.del('payees', p.id); toast('Sample data removed'); }
 };
 function addNames(txt) { const st = sheetState; for (const n of String(txt).split(',').map(s => s.trim()).filter(Boolean)) if (!st.members.some(m => norm(m) === norm(n))) st.members.push(n); renderSheet(); }
 function seatPlayer(name) {
@@ -1200,7 +1274,7 @@ document.addEventListener('input', e => {
   if (t.id === 'q') { S.q = t.value; render(); return; }
   if (!sheetState || !t.closest('#sheet')) return;
   const st = sheetState;
-  if (t.dataset.f) { st[t.dataset.f] = t.value; if (st.type === 'settle') st.touched = true; }
+  if (t.dataset.f) { st[t.dataset.f] = t.value; if (st.type === 'settle' || st.type === 'payee') st.touched = true; }
   else if (t.dataset.part) st.parts[t.dataset.part] = t.value;
   else if (t.dataset.paidm) st.paidMulti[t.dataset.paidm] = t.value;
   else if (t.dataset.item) st.items[+t.dataset.item][t.dataset.k] = t.value;
@@ -1248,8 +1322,8 @@ function toast(msg, label, fn) {
   if (label) t.querySelector('button').onclick = () => { t.hidden = true; fn(); };
   clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, label ? 6000 : 3200);
 }
-async function copyText(txt) {
-  try { await navigator.clipboard.writeText(txt); toast('Copied. Paste it into your group chat.'); }
+async function copyText(txt, msg) {
+  try { await navigator.clipboard.writeText(txt); toast(msg || 'Copied. Paste it into your group chat.'); }
   catch { openSheet({ type: 'me', name: meName() }); const b = $('#sheet .body'); b.innerHTML = `<p class="mut" style="margin:0">Copying is blocked here. Select the text below and copy it.</p><textarea class="input" id="copybox" rows="12">${esc(txt)}</textarea>`; $('#sheet header h2').textContent = 'Copy'; $('#copybox').select(); sheetState = null; }
 }
 async function exportCSV(g) {
@@ -1316,6 +1390,9 @@ async function loadSample() {
   await Store.put('groups', trip.id, trip); await Store.put('groups', flat.id, flat);
   for (const e of ex) await Store.put('expenses', e.id, e);
   for (const s of sessions) await Store.put('poker', s.id, s);
+  // obviously fake example bank details, removed with the rest of the sample
+  for (const [name, sortCode, account, other] of [['Ana', '000000', '00000001', ''], ['Ben', '000000', '00000002', 'Example: monzo.me/example']])
+    if (!payeeOf(name)) await Store.put('payees', payeeKey(name), { name, holder: name + ' (example)', sortCode, account, other, sample: true, updatedAt: Date.now() });
   toast('Sample data loaded. Remove it any time from Overview.');
 }
 

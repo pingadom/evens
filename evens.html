@@ -2,16 +2,16 @@
 <title>Evens</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: ledger-style app shell — slim nav rail left (bottom tab bar on phones), one working column right; money figures in mono, headline sums in a high-contrast serif. */
+/* Layout: nav rail left (bottom tab bar on phones), one content column right; money figures in mono. */
 :root{
   --bg:#EFF2EE; --surface:#FBFCFA; --surface-2:#E5EAE5; --ink:#111A16; --ink-2:#47524D; --muted:#78837E; --line:#D6DDD8;
   --accent:#9A6A0C; --accent-soft:#F3E6C8; --felt:#0F4F3D; --felt-ink:#EAF4EF;
   --pos:#147245; --pos-soft:#DCEFE4; --neg:#B53324; --neg-soft:#F6DFDA; --warn:#8A5A00; --warn-soft:#F7EACB;
   --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300;
   --shadow:0 1px 0 rgba(17,26,22,.04),0 8px 24px -12px rgba(17,26,22,.18);
-  --f-display:"Gloock",Georgia,"Times New Roman",serif;
+  --f-display:var(--f-body);
   --f-body:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
 }
@@ -44,7 +44,7 @@ h1,h2,h3{margin:0;text-wrap:balance;font-weight:600}
 .app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100%}
 .side{position:sticky;top:env(safe-area-inset-top,0px);height:100vh;padding:22px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:22px;background:var(--bg)}
 .brand{display:flex;flex-direction:column;gap:4px;padding:0 10px}
-.brand b{font:400 30px/1 var(--f-display);letter-spacing:-.01em}
+.brand b{font:700 22px/1 var(--f-display);letter-spacing:-.02em}
 .brand span{font:500 11px var(--f-mono);color:var(--muted);white-space:nowrap}
 .nav{display:flex;flex-direction:column;gap:2px}
 .nav button{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--ink-2);font-weight:500;min-width:0}
@@ -65,7 +65,7 @@ h1,h2,h3{margin:0;text-wrap:balance;font-weight:600}
 main{min-width:0;padding-block:28px 96px;padding-inline:clamp(16px,4vw,48px)}
 .wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
 .pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px}
-.pagehead h1{font:400 clamp(30px,4.4vw,44px)/1.05 var(--f-display);letter-spacing:-.01em}
+.pagehead h1{font:700 clamp(24px,3.4vw,32px)/1.15 var(--f-display);letter-spacing:-.015em}
 .pagehead .sub{color:var(--ink-2);margin-top:6px}
 .actions{display:flex;flex-wrap:wrap;gap:8px}
 
@@ -116,7 +116,7 @@ button.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .cols{display:grid;gap:16px;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
 .stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
-.stat .v{font:400 28px/1.1 var(--f-display);font-variant-numeric:lining-nums}
+.stat .v{font:600 24px/1.15 var(--f-mono);letter-spacing:-.02em}
 .stat .h{font-size:12.5px;color:var(--muted)}
 
 .gcard{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;min-width:0;transition:transform .15s,box-shadow .15s}
@@ -136,7 +136,7 @@ button.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .erow:hover{background:var(--surface)}
 .erow:focus-visible{outline:2px solid var(--accent)}
 .date{display:flex;flex-direction:column;align-items:center;line-height:1.05;color:var(--muted)}
-.date b{font:400 20px var(--f-display);color:var(--ink)}
+.date b{font:600 18px var(--f-display);color:var(--ink)}
 .date small{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em}
 .etitle{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .esub{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;gap:6px;align-items:center}
@@ -200,13 +200,12 @@ th button:focus-visible{outline:2px solid var(--accent)}
 td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
 tr:last-child td{border-bottom:0}
 tr.me td{background:var(--accent-soft)}
-.rank{font:400 18px var(--f-display);color:var(--muted);width:32px}
+.rank{font:600 15px var(--f-mono);color:var(--muted);width:32px}
 
 /* poker */
 .felt{background:var(--felt);color:var(--felt-ink);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden}
-.felt::after{content:"";position:absolute;inset:auto -60px -90px auto;width:240px;height:240px;border-radius:50%;border:18px dashed color-mix(in srgb,var(--felt-ink) 10%,transparent);pointer-events:none}
 .felt .eyebrow{color:color-mix(in srgb,var(--felt-ink) 70%,transparent)}
-.felt .big{font:400 clamp(30px,5vw,46px)/1 var(--f-display)}
+.felt .big{font:700 clamp(22px,3.4vw,30px)/1.15 var(--f-display)}
 .felt .btn{background:transparent;color:var(--felt-ink);border-color:color-mix(in srgb,var(--felt-ink) 35%,transparent)}
 .felt .btn.brass{background:var(--accent);border-color:var(--accent);color:#fff}
 .felt .input{background:color-mix(in srgb,var(--felt-ink) 8%,transparent);border-color:color-mix(in srgb,var(--felt-ink) 25%,transparent);color:var(--felt-ink)}
@@ -242,15 +241,15 @@ tr.me td{background:var(--accent-soft)}
 .sheet-wrap{position:fixed;inset:0;z-index:40;display:flex;justify-content:flex-end;background:color-mix(in srgb,var(--ink) 35%,transparent);animation:fade .15s}
 .sheet{width:min(520px,100%);height:100%;background:var(--bg);display:flex;flex-direction:column;box-shadow:-20px 0 50px -20px rgba(0,0,0,.4);animation:slide .2s ease-out}
 .sheet header{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:calc(16px + env(safe-area-inset-top,0px)) 20px 14px;border-bottom:1px solid var(--line)}
-.sheet header h2{font:400 24px var(--f-display)}
+.sheet header h2{font:700 19px var(--f-display)}
 .sheet .body{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:16px}
 .sheet footer{display:flex;gap:8px;justify-content:space-between;padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);flex-wrap:wrap}
 .sheet footer .end{display:flex;gap:8px;margin-left:auto}
 @keyframes fade{from{opacity:0}}
 @keyframes slide{from{transform:translateX(40px);opacity:.4}}
 .bigamt{display:flex;align-items:center;gap:8px;border-bottom:2px solid var(--ink);padding-bottom:4px}
-.bigamt span{font:400 28px var(--f-display);color:var(--muted)}
-.bigamt input{all:unset;font:400 38px/1.1 var(--f-display);width:100%;min-width:0}
+.bigamt span{font:500 26px var(--f-mono);color:var(--muted)}
+.bigamt input{all:unset;font:500 32px/1.2 var(--f-mono);width:100%;min-width:0}
 .splitlist{display:flex;flex-direction:column;gap:6px}
 .sl{display:grid;grid-template-columns:minmax(0,1fr) 120px 92px;gap:10px;align-items:center;padding:6px 8px;border-radius:10px;background:var(--surface)}
 .sl .who input[type=checkbox]{width:17px;height:17px;accent-color:var(--ink)}
@@ -269,11 +268,8 @@ tr.me td{background:var(--accent-soft)}
 
 /* empty + misc */
 .empty{display:flex;flex-direction:column;gap:14px;align-items:flex-start;padding:28px;border:1px dashed var(--line);border-radius:18px;background:var(--surface)}
-.empty h2{font:400 28px/1.1 var(--f-display)}
+.empty h2{font:700 20px/1.2 var(--f-display)}
 .empty p{margin:0;color:var(--ink-2);max-width:60ch}
-.feat{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));width:100%}
-.feat div{padding:12px 14px;border-radius:12px;background:var(--surface-2);font-size:14px;color:var(--ink-2)}
-.feat b{display:block;color:var(--ink);margin-bottom:2px}
 .banner{padding:10px 14px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-size:14px}
 #toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:70;display:flex;gap:12px;align-items:center;background:var(--ink);color:var(--bg);padding:10px 12px 10px 16px;border-radius:12px;box-shadow:var(--shadow);font-size:14px;max-width:calc(100% - 32px)}
 #toast button{all:unset;cursor:pointer;font-weight:700;color:var(--accent);padding:2px 6px}
@@ -301,7 +297,7 @@ tr.me td{background:var(--accent-soft)}
 
 <div class="app">
   <aside class="side" id="side"></aside>
-  <main id="main"><div class="loading">Opening your ledger…</div></main>
+  <main id="main"><div class="loading">Loading…</div></main>
 </div>
 <nav class="tabbar" id="tabbar"></nav>
 <div id="sheet" class="sheet-wrap" hidden></div>
@@ -397,7 +393,7 @@ const Store = {
         throw e;
       })
       .catch(e => {
-        if (e && e.code === 'invalid_argument') { this.canWrite = false; render(); toast('You can view this ledger but not change it. Ask the owner for Contributor access.'); }
+        if (e && e.code === 'invalid_argument') { this.canWrite = false; render(); toast('You have view-only access. Ask the owner for Contributor access to make changes.'); }
         else if (e && e.code === 'quota_exceeded') toast('Storage is full. Delete old sessions or groups to free space.');
         else toast('Could not save that change (' + (e && e.code || 'error') + ').');
       });
@@ -529,7 +525,7 @@ function keepFocus(container, fn) {
 function renderNow() {
   renderSide();
   const main = $('#main');
-  if (!Store.ready) { main.innerHTML = '<div class="loading">Opening your ledger…</div>'; return; }
+  if (!Store.ready) { main.innerHTML = '<div class="loading">Loading…</div>'; return; }
   if (S.route === 'group' && !Store.data.groups[S.id]) S.route = 'home';
   if (S.route === 'session' && !Store.data.poker[S.id]) S.route = 'poker';
   let html = '';
@@ -547,7 +543,7 @@ function renderSide() {
   const gs = groupsList();
   const cur = (r, id) => S.route === r && (id == null || S.id === id) ? 'true' : 'false';
   keepFocus($('#side'), () => $('#side').innerHTML = `
-    <div class="brand"><b>Evens</b><span>split · settle · poker</span></div>
+    <div class="brand"><b>Evens</b></div>
     <nav class="nav" aria-label="Main">
       <button data-go="home" aria-current="${cur('home')}">${I.home}Overview</button>
       <div class="eyebrow navlabel">Groups</div>
@@ -572,20 +568,14 @@ function viewHome() {
   const gs = groupsList(), ss = sessionsList();
   const me = meName();
   if (!gs.length && !ss.length) return `
-    <div class="pagehead"><div><div class="eyebrow">Overview</div><h1>Everyone square, nobody keeping score in their head.</h1></div></div>
+    <div class="pagehead"><div><h1>Evens</h1></div></div>
     <div class="empty">
-      <h2>Start a ledger</h2>
-      <p>Make a group for a flat, a trip or a regular dinner, then log who paid. Evens works out who owes whom with the fewest payments. Poker nights get their own tracker for buy-ins, rebuys, cash-outs and a running leaderboard.</p>
+      <h2>Get started</h2>
+      <p>Create a group to split costs with friends or flatmates, or log a poker night to track buy-ins and winnings.</p>
       <div class="actions">
         <button class="btn primary" data-act="new-group" ${Store.canWrite ? '' : 'disabled'}>${I.plus}Create a group</button>
         <button class="btn" data-act="new-session" ${Store.canWrite ? '' : 'disabled'}>${I.chip}Log a poker night</button>
         <button class="btn ghost" data-act="load-sample" ${Store.canWrite ? '' : 'disabled'}>Load sample data</button>
-      </div>
-      <div class="feat">
-        <div><b>Five ways to split</b>Equal, exact amounts, percentages, shares, or item by item with tax and tip.</div>
-        <div><b>Fewest payments</b>Balances net out across the whole group, so four people never need six transfers.</div>
-        <div><b>Poker ledger</b>Rebuys, cash-outs and a check that the bank balances. Results roll into a leaderboard.</div>
-        <div><b>Insights</b>Spend by category and month, who fronted the most, and your hourly rate at the table.</div>
       </div>
     </div>`;
 
@@ -599,8 +589,8 @@ function viewHome() {
   const recent = Object.values(Store.data.expenses).filter(e => Store.data.groups[e.groupId]).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 6);
   return `
     <div class="pagehead">
-      <div><div class="eyebrow">Overview</div><h1>${me ? `Hi ${esc(me.split(' ')[0])}.` : 'Your ledger'}</h1>
-      <div class="sub">${me ? '' : 'Set your name in the sidebar (or the You tab) to see what you personally owe and are owed.'}</div></div>
+      <div><h1>${me ? `Hi ${esc(me.split(' ')[0])}` : 'Overview'}</h1>
+      <div class="sub">${me ? '' : 'Add your name in the sidebar to see your own balances.'}</div></div>
       <div class="actions">
         ${hasSample ? `<button class="btn ghost" data-act="clear-sample">Remove sample data</button>` : ''}
         <button class="btn" data-act="new-session" ${Store.canWrite ? '' : 'disabled'}>${I.chip}Poker night</button>
@@ -609,25 +599,25 @@ function viewHome() {
     </div>
     ${me ? `<div class="stats">
       <div class="stat"><span class="eyebrow">You are owed</span><span class="v pos">${fmtMulti(owed)}</span><span class="h">across ${gs.filter(meIn).length} group${gs.filter(meIn).length === 1 ? '' : 's'}</span></div>
-      <div class="stat"><span class="eyebrow">You owe</span><span class="v neg">${fmtMulti(owe)}</span><span class="h">settle from any group's Balances tab</span></div>
+      <div class="stat"><span class="eyebrow">You owe</span><span class="v neg">${fmtMulti(owe)}</span><span class="h"></span></div>
       <div class="stat"><span class="eyebrow">Poker, lifetime</span><span class="v ${myPoker ? (myPoker.net >= 0 ? 'pos' : 'neg') : ''}">${myPoker ? money(myPoker.net, myPoker.cur, true) : '—'}</span><span class="h">${myPoker ? `${myPoker.sessions} session${myPoker.sessions === 1 ? '' : 's'}, ${Math.round(myPoker.wins / myPoker.sessions * 100)}% winning` : 'no finished sessions under your name'}</span></div>
     </div>` : ''}
     <section>
       <div class="cardhead"><h2>Groups</h2></div>
-      ${gs.length ? `<div class="grid">${gs.map(groupCard).join('')}</div>` : `<div class="empty"><p>No groups yet. A group is any set of people who share costs.</p><button class="btn primary" data-act="new-group">${I.plus}Create a group</button></div>`}
+      ${gs.length ? `<div class="grid">${gs.map(groupCard).join('')}</div>` : `<div class="empty"><p>No groups yet.</p><button class="btn primary" data-act="new-group">${I.plus}Create a group</button></div>`}
     </section>
     <div class="cols">
       <section class="card">
         <div class="cardhead"><h2>Latest activity</h2></div>
-        ${recent.length ? `<div class="list">${recent.map(e => expenseRow(e, Store.data.groups[e.groupId], true)).join('')}</div>` : '<p class="mut">Nothing logged yet.</p>'}
+        ${recent.length ? `<div class="list">${recent.map(e => expenseRow(e, Store.data.groups[e.groupId], true)).join('')}</div>` : '<p class="mut">No expenses yet.</p>'}
       </section>
       <section class="felt">
         <div class="eyebrow">Poker leaderboard</div>
         ${lb.length ? `<div class="list">${lb.sort((a, b) => b.net - a.net).slice(0, 5).map((r, i) => `
           <div style="display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid color-mix(in srgb,var(--felt-ink) 14%,transparent)">
-            <span style="font:400 18px var(--f-display);opacity:.7">${i + 1}</span>
+            <span class="mono" style="opacity:.7">${i + 1}</span>
             <span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name)}</span>
-            <span class="amt">${money(r.net, r.cur, true)}</span></div>`).join('')}</div>` : '<p style="margin:0;opacity:.8">Finish a poker night to start the table.</p>'}
+            <span class="amt">${money(r.net, r.cur, true)}</span></div>`).join('')}</div>` : '<p style="margin:0;opacity:.8">No finished sessions yet.</p>'}
         <div class="actions"><button class="btn" data-go="poker">Open poker</button><button class="btn brass" data-act="new-session" ${Store.canWrite ? '' : 'disabled'}>${I.plus}New night</button></div>
       </section>
     </div>`;
@@ -691,7 +681,7 @@ function viewGroup(g) {
     ${body}`;
 }
 function groupExpensesTab(g, ex) {
-  if (!ex.length) return `<div class="empty"><h2>No expenses yet</h2><p>Add the first thing someone paid for. Rent, a dinner bill, a taxi: anything shared.</p><button class="btn primary" data-act="add-exp" ${Store.canWrite ? '' : 'disabled'}>${I.plus}Add expense</button></div>`;
+  if (!ex.length) return `<div class="empty"><h2>No expenses yet</h2><button class="btn primary" data-act="add-exp" ${Store.canWrite ? '' : 'disabled'}>${I.plus}Add expense</button></div>`;
   const q = norm(S.q);
   const list = ex.filter(e => (!S.cat || (S.cat === 'payment' ? e.kind === 'payment' : e.category === S.cat && e.kind !== 'payment')) &&
     (!q || norm(e.desc).includes(q) || norm(e.notes).includes(q) || Object.keys(e.paid || {}).some(id => norm(memberName(g, id)).includes(q))));
@@ -708,7 +698,7 @@ function groupExpensesTab(g, ex) {
         <option value="">All categories</option>${Object.entries(CATS).map(([k, c]) => `<option value="${k}" ${S.cat === k ? 'selected' : ''}>${c[0]}</option>`).join('')}<option value="payment" ${S.cat === 'payment' ? 'selected' : ''}>Settlements</option>
       </select>
     </div>
-    <div class="list">${html || '<p class="mut" style="padding:20px 4px">Nothing matches that search.</p>'}</div>`;
+    <div class="list">${html || '<p class="mut" style="padding:20px 4px">No results.</p>'}</div>`;
 }
 function groupBalancesTab(g) {
   const net = netBalances(g), xs = simplify(net);
@@ -716,26 +706,26 @@ function groupBalancesTab(g) {
   const rows = g.members.map(m => ({ m, v: net[m.id] || 0 })).sort((a, b) => b.v - a.v);
   return `<div class="cols">
     <section class="card">
-      <div class="cardhead"><h2>Who's up, who's down</h2><span class="eyebrow">net of everything</span></div>
+      <div class="cardhead"><h2>Balances</h2></div>
       ${rows.map(({ m, v }) => `<div class="balrow">
         <span class="who">${av(m.name)}<span>${esc(m.name)}</span></span>
         <span class="divbar" data-tip="${esc(m.name)}|${v >= 0 ? 'is owed' : 'owes'} ${money(Math.abs(v), g.currency)}"><i class="${v >= 0 ? 'p' : 'n'}" style="width:${Math.abs(v) / max * 50}%"></i></span>
         <span class="amt ${v > 0 ? 'pos' : v < 0 ? 'neg' : 'mut'}">${money(v, g.currency, true)}</span></div>`).join('')}
     </section>
     <section class="card">
-      <div class="cardhead"><h2>Settle with ${xs.length} payment${xs.length === 1 ? '' : 's'}</h2></div>
+      <div class="cardhead"><h2>Suggested payments</h2></div>
       ${xs.length ? xs.map(x => `<div class="xfer">
         <span class="names">${av(memberName(g, x.from))}<b>${esc(memberName(g, x.from))}</b>${I.arrow}<b>${esc(memberName(g, x.to))}</b></span>
         <span class="amt">${money(x.amount, g.currency)}</span>
         <button class="btn sm" data-act="record-xfer" data-from="${x.from}" data-to="${x.to}" data-amt="${x.amount}" ${Store.canWrite ? '' : 'disabled'}>Record</button>
         ${payBox(memberName(g, x.to), x.amount, g.currency, g.name)}</div>`).join('')
-        : `<div class="settled">${I.check}Everyone is square.</div>`}
-      ${xs.length ? `<p class="mut" style="font-size:13px;margin:12px 0 0">Debts are netted across the group, so nobody pays someone who would only pay it on. <button class="btn ghost sm" data-act="copy-xfers">Copy as text</button></p>` : ''}
+        : `<div class="settled">${I.check}All settled up.</div>`}
+      ${xs.length ? `<p class="mut" style="font-size:13px;margin:12px 0 0"><button class="btn ghost sm" data-act="copy-xfers">Copy as text</button></p>` : ''}
     </section></div>`;
 }
 function groupInsightsTab(g, ex) {
   const spend = ex.filter(e => e.kind !== 'payment');
-  if (!spend.length) return '<div class="empty"><p>Insights appear once the group has a few expenses.</p></div>';
+  if (!spend.length) return '<div class="empty"><p>No expenses yet.</p></div>';
   const total = spend.reduce((s, e) => s + e.amount, 0);
   const byCat = {}; spend.forEach(e => byCat[e.category || 'other'] = (byCat[e.category || 'other'] || 0) + e.amount);
   const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]); const cmax = cats[0][1];
@@ -765,7 +755,7 @@ function groupInsightsTab(g, ex) {
           <span class="lab">${esc((CATS[k] || CATS.other)[0])}</span><span class="track"><span class="fill" style="display:block;width:${v / cmax * 100}%;background:var(--s1)"></span></span><span class="amt r" style="text-align:right">${money(v, g.currency)}</span></div>`).join('')}</div>
       </section>
     </div>
-    <section class="card"><div class="cardhead"><h2>Paid vs. share</h2><span class="eyebrow">who fronted the money</span></div>
+    <section class="card"><div class="cardhead"><h2>Paid vs share</h2></div>
       <div class="tablewrap"><table><thead><tr><th>Member</th><th class="r">Paid</th><th class="r">Their share</th><th class="r">Difference</th></tr></thead>
       <tbody>${per.map(({ m, paid, share }) => `<tr class="${meIn(g)?.id === m.id ? 'me' : ''}"><td><span class="who">${av(m.name)}<span>${esc(m.name)}</span></span></td><td class="r amt">${money(paid, g.currency)}</td><td class="r amt">${money(share, g.currency)}</td><td class="r amt ${paid - share > 0 ? 'pos' : paid - share < 0 ? 'neg' : ''}">${money(paid - share, g.currency, true)}</td></tr>`).join('')}</tbody></table></div>
     </section>`;
@@ -796,7 +786,7 @@ function viewPoker() {
   const live = ss.filter(s => s.status === 'live');
   const tabs = [['sessions', 'Sessions'], ['leaderboard', 'Leaderboard'], ['trends', 'Trends']];
   let body = '';
-  if (!ss.length) body = `<div class="empty"><h2>Deal the first hand</h2><p>Log a home game or a casino session: who bought in, every rebuy, what they cashed out. Evens checks the bank balances and tells losers exactly who to pay.</p><button class="btn brass" data-act="new-session" ${Store.canWrite ? '' : 'disabled'}>${I.plus}New poker night</button></div>`;
+  if (!ss.length) body = `<div class="empty"><h2>No sessions yet</h2><p>Track buy-ins, rebuys and cash-outs for each game.</p><button class="btn brass" data-act="new-session" ${Store.canWrite ? '' : 'disabled'}>${I.plus}New poker night</button></div>`;
   else if (S.ptab === 'sessions') body = `<div class="list" style="gap:10px">${ss.map(sessionCard).join('')}</div>`;
   else if (S.ptab === 'leaderboard') body = leaderboardTable(lb);
   else body = trendsTab(lb);
@@ -804,11 +794,11 @@ function viewPoker() {
   const cur = ss[0]?.currency || 'GBP';
   return `
     <div class="pagehead">
-      <div><div class="eyebrow">Poker tracker</div><h1>Poker nights</h1><div class="sub">${ss.length} session${ss.length === 1 ? '' : 's'} · ${lb.length} player${lb.length === 1 ? '' : 's'} · ${money(totalPot, cur)} total action</div></div>
+      <div><h1>Poker</h1><div class="sub">${ss.length} session${ss.length === 1 ? '' : 's'} · ${lb.length} player${lb.length === 1 ? '' : 's'} · ${money(totalPot, cur)} bought in</div></div>
       <div class="actions"><button class="btn brass" data-act="new-session" ${Store.canWrite ? '' : 'disabled'}>${I.plus}New session</button></div>
     </div>
     ${live.length ? `<div class="felt" style="flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between">
-      <div><div class="eyebrow">Live now</div><div style="font:400 24px var(--f-display)">${esc(live[0].title || 'Poker night')}</div><div style="opacity:.8;font-size:14px">${(live[0].players || []).length} players · ${money((live[0].players || []).reduce((a, p) => a + pIn(p), 0), live[0].currency)} on the table</div></div>
+      <div><div class="eyebrow">Live now</div><div style="font-weight:700;font-size:20px">${esc(live[0].title || 'Poker night')}</div><div style="opacity:.8;font-size:14px">${(live[0].players || []).length} players · ${money((live[0].players || []).reduce((a, p) => a + pIn(p), 0), live[0].currency)} on the table</div></div>
       <button class="btn brass" data-go="session" data-id="${live[0].id}">Open table</button></div>` : ''}
     ${ss.length ? `<div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" aria-selected="${S.ptab === k}" data-ptab="${k}">${l}</button>`).join('')}</div>` : ''}
     ${body}`;
@@ -845,7 +835,7 @@ function leaderboardTable(lb) {
       <td class="r amt">${Math.round(r.winp * 100)}%</td><td class="r amt ${sgn(r.hourly)}">${r.hourly == null ? '—' : money(Math.round(r.hourly), c, true)}</td>
       <td class="r amt pos">${money(r.best, c, true)}</td><td class="r amt neg">${money(r.worst, c, true)}</td>
       <td class="r amt">${r.streak > 0 ? `W${r.streak}` : r.streak < 0 ? `L${-r.streak}` : '—'}</td></tr>`).join('')}</tbody></table></div>
-    <p class="mut" style="font-size:13px;margin:10px 0 0">Players are matched by name across sessions. Per-hour uses sessions with a length logged. Only Final sessions count.</p></section>`;
+    <p class="mut" style="font-size:13px;margin:10px 0 0">Only finished sessions are counted.</p></section>`;
 }
 function trendsTab(lb) {
   const me = lb.find(r => norm(r.name) === norm(meName()));
@@ -935,7 +925,7 @@ function viewSession(s) {
       </div>
     </div>
     <section class="card">
-      <div class="cardhead"><h2>Players</h2><span class="mut" style="font-size:13px">Tap a buy-in chip's × to remove it. Cash-out is the chip count at the end, in money.</span></div>
+      <div class="cardhead"><h2>Players</h2></div>
       <div class="tablewrap"><table>
         <thead><tr><th>Player</th><th>Buy-ins</th><th class="r">In</th><th class="r">Cash out</th><th class="r">Net</th><th></th></tr></thead>
         <tbody>${ps.map((p, i) => { const n = pNet(p); return `<tr class="${norm(p.name) === norm(meName()) ? 'me' : ''}">
@@ -955,12 +945,12 @@ function viewSession(s) {
     </section>
     ${ps.length ? `<div class="ledger ${!allOut ? '' : diff === 0 ? 'ok' : 'bad'}">
       ${!allOut ? `<span>Waiting on ${ps.filter(p => p.cashOut == null).length} cash-out${ps.filter(p => p.cashOut == null).length === 1 ? '' : 's'} before the bank can be checked.</span>`
-        : diff === 0 ? `<b>${I.check.replace('<svg', '<svg width="16" height="16" style="vertical-align:-3px"')} The bank balances.</b><span>${money(tin, c)} in, ${money(tout, c)} out.</span>`
-        : `<b>The bank is ${diff > 0 ? 'over' : 'short'} by ${money(Math.abs(diff), c)}.</b><span>${diff > 0 ? 'More was cashed out than bought in. Check for a missed rebuy or a miscounted stack.' : 'Less was cashed out than bought in. Check stacks, or for chips still on the table.'}</span>`}
+        : diff === 0 ? `<b>${I.check.replace('<svg', '<svg width="16" height="16" style="vertical-align:-3px"')} Totals match.</b><span>${money(tin, c)} in, ${money(tout, c)} out.</span>`
+        : `<b>Cash-outs are ${money(Math.abs(diff), c)} ${diff > 0 ? 'more' : 'less'} than buy-ins.</b><span>Check for a missed rebuy or a wrong cash-out.</span>`}
     </div>` : ''}
-    ${xs.length ? `<section class="card"><div class="cardhead"><h2>Who pays whom</h2><span class="eyebrow">${xs.length} payment${xs.length === 1 ? '' : 's'}</span></div>
+    ${xs.length ? `<section class="card"><div class="cardhead"><h2>Payments</h2><span class="eyebrow">${xs.length} payment${xs.length === 1 ? '' : 's'}</span></div>
       ${xs.map(x => `<div class="xfer" style="grid-template-columns:minmax(0,1fr) auto"><span class="names">${av(ps[x.from].name)}<b>${esc(ps[x.from].name)}</b>${I.arrow}<b>${esc(ps[x.to].name)}</b></span><span class="amt">${money(x.amount, c)}</span>${payBox(ps[x.to].name, x.amount, c, s.title || 'Poker')}</div>`).join('')}
-      <p class="mut" style="font-size:13px;margin:10px 0 0">For games where buy-ins went on credit. If cash went into a bank, the banker pays out cash-outs instead.</p></section>` : ''}
+      <p class="mut" style="font-size:13px;margin:10px 0 0">Based on each player's net result.</p></section>` : ''}
     ${s.notes ? `<section class="card"><div class="eyebrow">Notes</div><p style="margin:6px 0 0;white-space:pre-wrap">${esc(s.notes)}</p></section>` : ''}
     <div>${confirmDel === s.id ? `<div class="confirm"><b>Delete this session?</b><span style="font-size:14px">Its results leave the leaderboard for everyone.</span><div class="actions"><button class="btn danger" data-act="del-session-yes">Delete session</button><button class="btn" data-act="del-cancel">Keep it</button></div></div>`
       : `<button class="btn danger" data-act="del-session" ${w ? '' : 'disabled'}>Delete session</button>`}</div>`;
@@ -1084,8 +1074,7 @@ function settleSheet(st) {
   const bad = st.from === st.to ? 'Pick two different people.' : !toCents(st.amount) ? 'Enter an amount.' : '';
   const net = netBalances(g);
   const body = `
-    <p class="mut" style="margin:0">Record money that changed hands outside the app: a bank transfer, cash, or a payment app.</p>
-    <div class="row"><label class="f">Who paid<select class="input" id="s-from" data-f="from">${opts(st.from)}</select></label><label class="f">Who received<select class="input" id="s-to" data-f="to">${opts(st.to)}</select></label></div>
+        <div class="row"><label class="f">Who paid<select class="input" id="s-from" data-f="from">${opts(st.from)}</select></label><label class="f">Who received<select class="input" id="s-to" data-f="to">${opts(st.to)}</select></label></div>
     <div class="bigamt"><span>${esc(sym(g.currency))}</span><input id="s-amt" data-f="amount" inputmode="decimal" placeholder="0.00" value="${esc(st.amount)}" aria-label="Amount" autofocus></div>
     <label class="f">Date<input class="input" type="date" id="s-date" data-f="date" value="${esc(st.date)}"></label>
     ${st.from !== st.to ? payBox(memberName(g, st.to), toCents(st.amount) || null, g.currency, g.name) : ''}
@@ -1114,16 +1103,16 @@ function sessionSheet(st) {
     <div class="row"><label class="f">Game<select class="input" id="ps-game" data-f="game">${['NL Hold’em cash', 'PLO cash', 'Tournament', 'Sit & Go', 'Mixed games', 'Other'].map(x => `<option ${x === st.game ? 'selected' : ''}>${x}</option>`).join('')}</select></label><label class="f">Blinds / stakes<input class="input" id="ps-stakes" data-f="stakes" placeholder="0.10/0.20" value="${esc(st.stakes)}"></label></div>
     <div class="row"><label class="f">Default buy-in<input class="input" id="ps-buy" data-f="defaultBuyIn" inputmode="decimal" value="${esc(st.defaultBuyIn)}"></label><label class="f">Currency<select class="input" id="ps-cur" data-f="currency">${CURRENCIES.map(c => `<option ${c === st.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label><label class="f">Hours played<input class="input" id="ps-hours" data-f="hours" inputmode="decimal" placeholder="e.g. 4.5" value="${esc(st.hours)}"></label></div>
     ${!st.id ? `<label class="f">Players<input class="input" id="ps-players" data-f="playersTxt" placeholder="Comma-separated, e.g. Ana, Ben, Dev" value="${esc(st.playersTxt)}"><span class="mut" style="font-weight:400">Everyone starts with one default buy-in. Add more players or rebuys at the table.</span></label>` : ''}
-    <label class="f">Notes<textarea class="input" id="ps-notes" data-f="notes" placeholder="Big hands, who brought snacks…">${esc(st.notes)}</textarea></label>`;
+    <label class="f">Notes<textarea class="input" id="ps-notes" data-f="notes" placeholder="Optional">${esc(st.notes)}</textarea></label>`;
   const foot = `<div class="end"><button type="button" class="btn" data-act="close-sheet">Cancel</button><button type="button" class="btn brass" data-act="save-session" ${Store.canWrite ? '' : 'disabled'}>${st.id ? 'Save details' : 'Start session'}</button></div>`;
   return { title: st.id ? 'Session details' : 'New poker session', body, foot };
 }
 function meSheet(st) {
   return { title: 'You', body: `<label class="f">Your name<input class="input" id="me-sheet" data-f="name" value="${esc(st.name)}" placeholder="Match how you appear in groups" autofocus></label>
-    <p class="mut" style="margin:0">Evens matches this to member and player names, so it can show your own balances and poker results. It's remembered on this device only.</p>
+    <p class="mut" style="margin:0">Used to show your own balances and results. Saved on this device only.</p>
     <div class="syncpill"><span class="dot ${Store.mode === 'shared' ? 'on' : ''}"></span>${Store.mode === 'shared' ? 'Data syncs with everyone you share this page with.' : 'Data is saved in this browser only.'}</div>
     ${st.name.trim() ? `<div class="f"><span>Your bank details</span>${payeeOf(st.name) ? payBox(st.name.trim()) : `<button type="button" class="btn" data-act="edit-payee" data-name="${esc(st.name.trim())}" style="align-self:flex-start" ${Store.canWrite ? '' : 'disabled'}>${I.plus}Add your bank details</button>`}
-      <span class="mut" style="font-weight:400">Friends who owe you see these next to what they owe, with one-tap copy.</span></div>` : ''}`,
+      <span class="mut" style="font-weight:400">Shown to people who owe you money.</span></div>` : ''}`,
     foot: `<div class="end"><button type="button" class="btn primary" data-act="save-me">Done</button></div>` };
 }
 function payeeSheet(st) {
@@ -1138,9 +1127,9 @@ function payeeSheet(st) {
       <label class="f">Sort code<input class="input mono" id="py-sort" data-f="sortCode" inputmode="numeric" placeholder="12-34-56" maxlength="8" value="${esc(st.sortCode)}" autocomplete="off"></label>
       <label class="f">Account number<input class="input mono" id="py-acc" data-f="account" inputmode="numeric" placeholder="12345678" maxlength="8" value="${esc(st.account)}" autocomplete="off"></label>
     </div>
-    <label class="f">Other ways to pay<input class="input" id="py-other" data-f="other" placeholder="e.g. monzo.me/ana, Revolut @ana, PayPal, IBAN" value="${esc(st.other)}" autocomplete="off"><span class="mut" style="font-weight:400">Optional. Useful for friends abroad or payment apps.</span></label>
+    <label class="f">Other ways to pay<input class="input" id="py-other" data-f="other" placeholder="e.g. monzo.me/ana, Revolut @ana, PayPal, IBAN" value="${esc(st.other)}" autocomplete="off"></label>
     ${st.touched && errs.length ? `<div class="hint bad">${errs.map(esc).join('<br>')}</div>` : ''}
-    <div class="hint">${Store.mode === 'shared' ? 'Everyone who can open this ledger can see these details. Only add details you are happy to share with these groups. Never add card numbers, PINs or passwords.' : 'Saved in this browser only. Never add card numbers, PINs or passwords.'} These details apply to “${esc(st.name)}” in every group and on poker nights.</div>`;
+    <div class="hint">${Store.mode === 'shared' ? 'Anyone with access to this page can see these details.' : 'Saved in this browser only.'} Used for “${esc(st.name)}” in all groups and poker sessions.</div>`;
   const foot = `${payeeOf(st.name) ? `<button type="button" class="btn danger" data-act="del-payee">Remove details</button>` : ''}
     <div class="end"><button type="button" class="btn" data-act="close-sheet">Cancel</button><button type="button" class="btn primary" data-act="save-payee" ${errs.length || !Store.canWrite ? 'disabled' : ''}>Save details</button></div>`;
   return { title: `${st.name}'s bank details`, body, foot };
@@ -1323,7 +1312,7 @@ function toast(msg, label, fn) {
   clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, label ? 6000 : 3200);
 }
 async function copyText(txt, msg) {
-  try { await navigator.clipboard.writeText(txt); toast(msg || 'Copied. Paste it into your group chat.'); }
+  try { await navigator.clipboard.writeText(txt); toast(msg || 'Copied'); }
   catch { openSheet({ type: 'me', name: meName() }); const b = $('#sheet .body'); b.innerHTML = `<p class="mut" style="margin:0">Copying is blocked here. Select the text below and copy it.</p><textarea class="input" id="copybox" rows="12">${esc(txt)}</textarea>`; $('#sheet header h2').textContent = 'Copy'; $('#copybox').select(); sheetState = null; }
 }
 async function exportCSV(g) {
@@ -1393,7 +1382,7 @@ async function loadSample() {
   // obviously fake example bank details, removed with the rest of the sample
   for (const [name, sortCode, account, other] of [['Ana', '000000', '00000001', ''], ['Ben', '000000', '00000002', 'Example: monzo.me/example']])
     if (!payeeOf(name)) await Store.put('payees', payeeKey(name), { name, holder: name + ' (example)', sortCode, account, other, sample: true, updatedAt: Date.now() });
-  toast('Sample data loaded. Remove it any time from Overview.');
+  toast('Sample data loaded');
 }
 
 /* ---------- boot ---------- */
